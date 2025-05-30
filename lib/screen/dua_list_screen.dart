@@ -83,7 +83,7 @@ class _DuaListScreenState extends State<DuaListScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               itemBuilder: (context, index) {
                 final dua = _displayedDuas[index];
-                return DuaListCardWidget(dua: dua, index: index);
+                return DuaListCardWidget(dua: dua, index: index, duaList: _displayedDuas);
               },
             ),
           ),

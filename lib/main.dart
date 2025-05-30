@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iomdailyazkar/home_page.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -144,7 +145,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       home: Scaffold(
-        body: Center(child: Text('📱 Azkar App Running')),
+        body: HomeScreen(),
       ),
     );
   }

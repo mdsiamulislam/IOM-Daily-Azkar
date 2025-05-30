@@ -8,10 +8,12 @@ class DuaListCardWidget extends StatelessWidget {
     super.key,
     required this.dua,
     required this.index,
+    required this.duaList,
   });
 
   final dynamic dua;
   final int index;
+  final List<dynamic> duaList;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +49,7 @@ class DuaListCardWidget extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => DuaDetailScreen(
-                duaData: dua,
+                duaData: duaList,
                 duaIndex: index,
               ),
             ),
