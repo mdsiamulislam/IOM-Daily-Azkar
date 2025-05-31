@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:iomdailyazkar/prayer_time_widget.dart';
+import 'package:iomdailyazkar/widget/prayer_time_widget.dart';
 import 'package:iomdailyazkar/screen/about_app_screen.dart';
 import 'package:iomdailyazkar/screen/i_fatwa_list_screen.dart';
 import 'package:iomdailyazkar/screen/our_apps_screen.dart';
@@ -264,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               SizedBox(height: 10),
-              PrayerTimesWidget(),
+              CombinedPrayerTimesWidget(),
               SizedBox(height: 16),
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
               SizedBox(height: 24),

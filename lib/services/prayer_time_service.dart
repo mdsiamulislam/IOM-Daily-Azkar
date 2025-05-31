@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:iomdailyazkar/prayer_time.dart';
+import 'package:iomdailyazkar/helper/prayer_time.dart';
 
 class PrayerTimeService {
   final String baseUrl = 'https://api.aladhan.com/v1/timingsByCity';

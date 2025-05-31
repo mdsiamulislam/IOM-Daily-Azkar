@@ -33,8 +33,8 @@ Future<void> main() async {
   // অথবা ব্যবহারকারীকে UI থেকে সেট করার সুযোগ দিতে পারেন।
   await NotificationService.scheduleDailyNotification(
     id: 0,
-    title: 'দৈনিক আজকার reminder ! এখন মিস হয়ে গেলে আর সুযোগ পাবেন না ।',
-    body: 'আপনার আজকের আজকারগুলো সম্পন্ন করুন।',
+    title: 'দৈনিক আযকার reminder ! এখন মিস হয়ে গেলে আর সুযোগ পাবেন না ।',
+    body: 'আপনার আজকের আযকারগুলো সম্পন্ন করুন।',
     hour: 22, // 22:15 = রাত 10:15
     minute: 30,
     payload: 'daily_azkar_type_1',
@@ -42,16 +42,16 @@ Future<void> main() async {
 
   await NotificationService.scheduleDailyNotification(
     id: 1,
-    title: 'সকালের আজকার Reminder!',
-    body: 'সকালের আজকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    title: 'সকালের আযকার Reminder!',
+    body: 'সকালের আযকারগুলো সম্পন্ন করতে ভুলবেন না।',
     hour: 6, // 8:00 AM
     minute: 0,
     payload: 'daily_azkar_morning',
   );
   await NotificationService.scheduleDailyNotification(
     id: 1,
-    title: 'রাতের আজকার Reminder!',
-    body: 'সকালের আজকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    title: 'রাতের আযকার Reminder!',
+    body: 'সকালের আযকারগুলো সম্পন্ন করতে ভুলবেন না।',
     hour: 18, // 8:00 AM
     minute: 0,
     payload: 'daily_azkar_night',
@@ -85,7 +85,7 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }
