@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:iomdailyazkar/prayer_time_widget.dart';
 import 'package:iomdailyazkar/screen/about_app_screen.dart';
+import 'package:iomdailyazkar/screen/i_fatwa_list_screen.dart';
 import 'package:iomdailyazkar/screen/settings_page.dart';
 import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
+  List <dynamic> fatwaData = [];
   List<dynamic> data = [];
   bool isLoading = true;
   int randomIndex = 0;
@@ -92,6 +94,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
+  // lib/screen/home_screen.dart
+
+// ... অন্যান্য কোড ...
+
   Future<void> loadDataFromDevice() async {
     final prefs = await SharedPreferences.getInstance();
     try {
@@ -99,15 +105,23 @@ class _HomeScreenState extends State<HomeScreen> {
       final storedHadithList = prefs.getString('hadithList');
       final storedData = prefs.getString('data');
       final storedDuaData = prefs.getString('duaData');
+      // এই লাইনটি পরিবর্তন করুন:
+      final storedFatwaData = prefs.getString('ifatwaData'); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
+
 
       if (storedCategories != null &&
           storedHadithList != null &&
           storedData != null &&
-          storedDuaData != null) {
+          storedDuaData != null &&
+          storedFatwaData != null
+      ) {
         categories = json.decode(storedCategories);
         hadithList = json.decode(storedHadithList);
         data = json.decode(storedData);
         duaData = json.decode(storedDuaData);
+        // এই লাইনটি পরিবর্তন করুন:
+        fatwaData = json.decode(storedFatwaData); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
+
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
         }
@@ -120,6 +134,12 @@ class _HomeScreenState extends State<HomeScreen> {
       await fetchAndStoreData();
     }
   }
+
+// ... বাকি কোড ...
+
+  // lib/screen/home_screen.dart
+
+// ... অন্যান্য কোড ...
 
   Future<void> fetchAndStoreData() async {
     setState(() => isLoading = true);
@@ -135,10 +155,15 @@ class _HomeScreenState extends State<HomeScreen> {
         await prefs.setString('hadithList', json.encode(result['hadith'] ?? []));
         await prefs.setString('duaData', json.encode(result['dua'] ?? []));
         await prefs.setString('data', json.encode(result['data'] ?? []));
+        // এই লাইনটি পরিবর্তন করুন:
+        await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? [])); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
 
         categories = result['categories'] ?? [];
         hadithList = result['hadith'] ?? [];
         duaData = result['dua'] ?? [];
+        // এই লাইনটি পরিবর্তন করুন:
+        fatwaData = result['ifatwa'] ?? []; // <--- fatwaData থেকে ifatwa তে পরিবর্তন করা হয়েছে
+
         data = result['data'] ?? [];
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
@@ -156,6 +181,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => isLoading = false);
     }
   }
+
+// ... বাকি কোড ...
 
   Icon getIconFromName(String iconName) {
     switch (iconName) {
@@ -242,6 +269,8 @@ class _HomeScreenState extends State<HomeScreen> {
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
               SizedBox(height: 24),
               isLoading ? _buildShimmerGrid() : _buildCategoryGrid(),
+              SizedBox(height: 24),
+              isLoading ? _buildShimmerCard() : _buildFatwaSection(),
             ],
           ),
         ),
@@ -414,6 +443,77 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildFatwaSection() {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16), // আরও গোলাকার কোণা
+      ),
+      elevation: 6, // একটু বেশি শ্যাডো
+      shadowColor: Colors.green.withOpacity(0.3), // সবুজ রঙের শ্যাডো
+      child: InkWell( // পুরো কার্ডটিকে ক্লিকযোগ্য করতে
+        onTap: () {
+          // এখানে IFatwaListScreen-এ নেভিগেট করুন এবং fatwaData পাস করুন
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => IFatwaListScreen(fatwaData: fatwaData), // fatwaData পাস করা হচ্ছে
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16), // InkWell এর জন্য একই বর্ডার রেডিয়াস
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withOpacity(0.1), // হালকা সবুজ ব্যাকগ্রাউন্ড
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.book_outlined, // ফতোয়ার জন্য উপযুক্ত আইকন
+                  color: AppColors.primaryGreen,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "ফতোয়া বিভাগ", // আরও স্পষ্ট শিরোনাম
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGreen,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।", // ছোট ও স্পষ্ট বিবরণ
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios, // Arrow আইকন
+                color: AppColors.primaryGreen,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

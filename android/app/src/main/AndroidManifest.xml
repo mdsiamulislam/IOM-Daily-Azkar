@@ -10,7 +10,7 @@
 
 
     <application
-        android:label="iomdailyazkar"
+        android:label="IOM Daily Azkar"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
