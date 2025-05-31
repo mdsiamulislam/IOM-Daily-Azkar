@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iomdailyazkar/home_page.dart';
+import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -143,10 +144,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: HomeScreen(),
-      ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Iom Daily Azkar',
+        theme: ThemeData(
+        fontFamily: AppTextStyles.regular.fontFamily,
+        textTheme: TextTheme(
+        displayLarge: AppTextStyles.heading1.copyWith(fontSize: 32.0),
+    headlineMedium: AppTextStyles.bold.copyWith(fontSize: 24.0),
+    bodyLarge: AppTextStyles.regular.copyWith(fontSize: 18.0),
+    bodyMedium: AppTextStyles.regular,
+    bodySmall: AppTextStyles.light,
+    ),
+    useMaterial3: true,
+    ),
+      home: HomeScreen(),
     );
   }
 }

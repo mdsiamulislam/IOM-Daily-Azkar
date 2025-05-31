@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:iomdailyazkar/prayer_time_widget.dart';
 import 'package:iomdailyazkar/screen/about_app_screen.dart';
+import 'package:iomdailyazkar/screen/settings_page.dart';
+import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -258,18 +260,23 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundImage: AssetImage('assets/logo.png'), // Replace with your image
+                Center(
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage('assets/logo.png'),
+                  ),
                 ),
                 SizedBox(height: 8),
-                Text('স্বাগতম! এই অ্যাপটি ইসলামী দোয়া ও হাদিসের জন্য তৈরি।', style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text('স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ', textAlign: TextAlign.center, style: AppTextStyles.bold.copyWith(
+                  color: Colors.white,
+                  fontSize: 16,
+                )),
               ],
             ),
           ),
           ListTile(
             leading: Icon(Icons.share),
-            title: Text('অ্যাপ শেয়ার করুন'),
+            title: Text('অ্যাপ শেয়ার করুন', style: AppTextStyles.regular),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
               final packageName = info.packageName;
@@ -280,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: Icon(Icons.star),
-            title: Text('রেটিং দিন'),
+            title: Text('রেটিং দিন', style: AppTextStyles.regular,),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
               final packageName = info.packageName;
@@ -296,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: Icon(Icons.feedback),
-            title: Text('ফিডব্যাক দিন'),
+            title: Text('ফিডব্যাক দিন', style: AppTextStyles.regular),
             onTap: () async {
               final Uri emailLaunchUri = Uri(
                 scheme: 'mailto',
@@ -313,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: Icon(Icons.info),
-            title: Text('অ্যাপ সম্পর্কে'),
+            title: Text('অ্যাপ সম্পর্কে', style: AppTextStyles.regular),
             onTap: (){
               Navigator.push(
                 context,

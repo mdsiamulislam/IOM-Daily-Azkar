@@ -33,7 +33,7 @@ class AboutAppScreen extends StatelessWidget {
               child: Column(
                 children: [
                   CircleAvatar(
-                    radius: 50,
+                    radius: 60,
                     backgroundColor: Colors.white,
                     backgroundImage: AssetImage('assets/logo.png'),
                   ),
