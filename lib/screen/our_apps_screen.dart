@@ -112,8 +112,6 @@ class OurAppsScreen extends StatelessWidget {
                               fontSize: 14,
                               color: Colors.black87,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 5),
                           const Text(
