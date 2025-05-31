@@ -116,45 +116,73 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Container(
-              // আপনার আগের সুন্দর ডিজাইন ফিরিয়ে আনা হয়েছে
+            child: Container( // Material এর বদলে Container ব্যবহার করুন Elevation বাদ দেওয়ার জন্য
               decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(12), // আগের মত গোলাকার কোণা
-                boxShadow: const [
-                  BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3)),
+                color: AppColors.lightGreen, // ফিল্ডের ব্যাকগ্রাউন্ড কালার
+                borderRadius: BorderRadius.circular(12), // গোলাকার কোণা
+                // ইনার শ্যাডো ইফেক্টের জন্য
+                boxShadow: [
+                  // উপরের ও বামের হালকা শ্যাডো (আলোর উৎস থেকে)
+                  BoxShadow(
+                    color: AppColors.white.withOpacity(0.7), // হালকা সাদা শ্যাডো
+                    offset: Offset(-2, -2), // বাম ও উপরের দিকে শ্যাডো
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                    // ইনসেট শ্যাডোর মতো প্রভাবের জন্য এটি গুরুত্বপূর্ণ।
+                    // যদিও এটি প্রকৃত ইনসেট শ্যাডো নয়, এটি সেই অনুভূতি দেয়।
+                  ),
+                  // নিচের ও ডানের গাঢ় শ্যাডো (অন্ধকার অংশ)
+                  BoxShadow(
+                    color: AppColors.innerShadowColor.withOpacity(0.1), // হালকা কালো শ্যাডো
+                    offset: Offset(2, 2), // ডান ও নিচের দিকে শ্যাডো
+
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
                 ],
               ),
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
                   hintText: 'ফতোয়া খুঁজুন...',
-                  hintStyle: TextStyle(color: Colors.grey[600]),
-                  prefixIcon: Icon(Icons.search, color: AppColors.primaryGreen),
+                  hintStyle: TextStyle(color: Colors.grey[700]),
+                  prefixIcon: Icon(Icons.search, color: AppColors.primaryGreen, size: 24),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
                     icon: Icon(Icons.clear, color: Colors.grey[600]),
                     onPressed: () {
                       _searchController.clear();
-                      _applyFilters();
+                      // আপনার ফিল্টার লজিক এখানে কল করুন
+                      // যেমন: _applyFilters();
+                      if (mounted) {
+                        setState(() {
+                          // এটি নিশ্চিত করবে যে ক্লিয়ার আইকনটি সঠিকভাবে লুকাবে
+                        });
+                      }
                     },
                   )
                       : null,
-                  border: OutlineInputBorder( // OutlineInputBorder ফিরিয়ে আনা হয়েছে
+                  border: InputBorder.none, // কোনো বর্ডার নেই
+                  focusedBorder: OutlineInputBorder( // ফোকাস করলে বর্ডার
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none, // নো বর্ডার
+                    borderSide: BorderSide(color: AppColors.primaryGreen, width: 2.0), // সবুজ বর্ডার
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.primaryGreen, width: 2), // ফোকাস করলে সবুজ বর্ডার
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none, // এনেবল থাকাকালে কোনো বর্ডার নেই
-                  ),
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                  enabledBorder: InputBorder.none, // এনেবল থাকাকালে কোনো বর্ডার নেই
+                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 ),
                 cursorColor: AppColors.primaryGreen,
+                style: TextStyle(color: Colors.black87, fontSize: 16),
+                onChanged: (query) {
+                  if (mounted) {
+                    setState(() {}); // ক্লিয়ার আইকন আপডেটের জন্য
+                  }
+                  // _applyFilters(); // যদি প্রতিটি ক্যারেক্টার টাইপ করার সময় ফিল্টার করতে চান
+                },
+                textInputAction: TextInputAction.search,
+                onSubmitted: (query) {
+                  // যখন ইউজার কিবোর্ডের সার্চ বাটন ক্লিক করবে
+                  // _applyFilters();
+                },
               ),
             ),
           ),

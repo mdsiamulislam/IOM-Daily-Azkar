@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:iomdailyazkar/prayer_time_widget.dart';
 import 'package:iomdailyazkar/screen/about_app_screen.dart';
 import 'package:iomdailyazkar/screen/i_fatwa_list_screen.dart';
-import 'package:iomdailyazkar/screen/settings_page.dart';
+import 'package:iomdailyazkar/screen/our_apps_screen.dart';
 import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -302,6 +302,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 )),
               ],
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.apps), // নতুন আইকন
+            title: const Text('আমাদের অন্যান্য অ্যাপস'), // নতুন শিরোনাম
+            onTap: () {
+              Navigator.pop(context); // ড্রয়ার বন্ধ করুন
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const OurAppsScreen()),
+              );
+            },
           ),
           ListTile(
             leading: Icon(Icons.share),

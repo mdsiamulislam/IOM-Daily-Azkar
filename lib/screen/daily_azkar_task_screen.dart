@@ -26,7 +26,7 @@ class _DailyAzkarTaskScreenState extends State<DailyAzkarTaskScreen> {
       _morningAzkar = prefs.getBool('morningAzkar') ?? false;
       _eveningAzkar = prefs.getBool('eveningAzkar') ?? false;
       _prayerAzkar = prefs.getBool('prayerAzkar') ?? false;
-      _updateCompletionStatus();
+      _updateCompletionStatus(); // ডেটা লোড হওয়ার পরে স্ট্যাটাস আপডেট করুন
     });
   }
 
@@ -45,64 +45,66 @@ class _DailyAzkarTaskScreenState extends State<DailyAzkarTaskScreen> {
       _allTasksCompleted = completed;
     });
 
-    _saveValues();
+    _saveValues(); // স্ট্যাটাস সেভ করুন
 
     if (completed) {
-      // Notify HomeScreen that all tasks are completed
-      Navigator.pop(context, true);
+      // সমস্ত কাজ সম্পন্ন হলে HomeScreen কে জানানোর জন্য
+      // নিশ্চিত করুন যে আপনি Navigator.pop(context, true) ব্যবহার করছেন
+      // শুধুমাত্র যদি এটি একটি ModalRoute থেকে পপ করা হয়।
+      // এই ক্ষেত্রে, HomeScreen থেকে push করা হয়েছে, তাই এটি কাজ করবে।
+      if (Navigator.canPop(context)) { // নিশ্চিত করুন যে পপ করা যাবে
+        Navigator.pop(context, true);
+      }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
-        title: const Text('প্রতিদিনের আজকার ও দোয়া',
+        title: const Text('প্রতিদিনের আজকার ও দোয়া',
             style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             )),
         backgroundColor: Colors.green[700],
       ),
-      body: Expanded(
-            child: ListView(
-              children: [
-                _buildAzkarTile(
-                  title: 'সকালের আজকার',
-                  subtitle: 'সকালের আজকার সম্পন্ন করুন ।',
-                  icon: Icons.wb_sunny,
-                  value: _morningAzkar,
-                  onChanged: (value) {
-                    setState(() => _morningAzkar = value ?? false);
-                    _updateCompletionStatus();
-                  },
-                ),
-                _buildAzkarTile(
-                  title: 'বিকালের আজকার',
-                  subtitle: ' বিকালের আজকার সম্পন্ন করুন ।',
-                  icon: Icons.nightlight_round,
-                  value: _eveningAzkar,
-                  onChanged: (value) {
-                    setState(() => _eveningAzkar = value ?? false);
-                    _updateCompletionStatus();
-                  },
-                ),
-                _buildAzkarTile(
-                  title: ' নামাজের আজকার',
-                  subtitle: ' নামাজের আজকার সম্পন্ন করুন ।',
-                  icon: Icons.safety_check,
-                  value: _prayerAzkar,
-                  onChanged: (value) {
-                    setState(() => _prayerAzkar = value ?? false);
-                    _updateCompletionStatus();
-                  },
-                ),
-              ],
-            ),
+      body: ListView( // <--- Expanded উইজেটটি সরিয়ে দেওয়া হয়েছে
+        children: [
+          _buildAzkarTile(
+            title: 'সকালের আজকার',
+            subtitle: 'সকালের আজকার সম্পন্ন করুন ।',
+            icon: Icons.wb_sunny,
+            value: _morningAzkar,
+            onChanged: (value) {
+              setState(() => _morningAzkar = value ?? false);
+              _updateCompletionStatus();
+            },
           ),
+          _buildAzkarTile(
+            title: 'বিকালের আজকার',
+            subtitle: ' বিকালের আজকার সম্পন্ন করুন ।',
+            icon: Icons.nightlight_round,
+            value: _eveningAzkar,
+            onChanged: (value) {
+              setState(() => _eveningAzkar = value ?? false);
+              _updateCompletionStatus();
+            },
+          ),
+          _buildAzkarTile(
+            title: ' নামাজের আজকার',
+            subtitle: ' নামাজের আজকার সম্পন্ন করুন ।',
+            icon: Icons.safety_check,
+            value: _prayerAzkar,
+            onChanged: (value) {
+              setState(() => _prayerAzkar = value ?? false);
+              _updateCompletionStatus();
+            },
+          ),
+        ],
+      ),
     );
   }
 

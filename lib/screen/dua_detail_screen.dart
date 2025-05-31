@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart'; // নিশ্চিত করুন যে এটি ইম্পোর্ট করা আছে
 
 class DuaDetailScreen extends StatefulWidget {
   final int duaIndex;
@@ -17,45 +19,116 @@ class DuaDetailScreen extends StatefulWidget {
 }
 
 class _DuaDetailScreenState extends State<DuaDetailScreen> {
-  bool isBookmarked = false;
+  bool isBookmarked = false; // বুকমার্ক ফাংশনালিটি যদি ভবিষ্যতে যোগ করা হয়
   double fontSize = 20.0;
-  late PageController _pageController; // PageController যোগ করুন
+  late PageController _pageController;
+  String _appPackageName = ''; // প্যাকেজ নাম সংরক্ষণের জন্য
+  String _appStoreLink = ''; // প্লে স্টোর/অ্যাপ স্টোর লিঙ্ক সংরক্ষণের জন্য
 
   @override
   void initState() {
     super.initState();
-    // initialPage সেট করুন যাতে সঠিক দোয়া থেকে শুরু হয়
     _pageController = PageController(initialPage: widget.duaIndex);
+    _loadPackageInfo();
   }
 
   @override
   void dispose() {
-    _pageController.dispose(); // Controller ডিসপোজ করুন
+    _pageController.dispose();
     super.dispose();
   }
 
-  void _copyToClipboard() {
-    // বর্তমান পেজের দোয়া ডেটা ব্যবহার করুন
-    final currentDua = widget.duaData[_pageController.page!.round()];
-    final text = currentDua['dua'] ?? '';
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('দোয়া কপি করা হয়েছে')),
-    );
+  // প্যাকেজ তথ্য লোড করার ফাংশন
+  Future<void> _loadPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _appPackageName = info.packageName;
+      // Android এবং iOS এর জন্য প্লে স্টোর/অ্যাপ স্টোর লিঙ্ক
+      // আপনার অ্যাপের আসল লিঙ্ক বসান
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        _appStoreLink = 'https://play.google.com/store/apps/details?id=$_appPackageName';
+      } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+        _appStoreLink = 'https://apps.apple.com/us/app/your-app-id'; // আপনার iOS অ্যাপ ID দিন
+      } else {
+        _appStoreLink = ''; // অন্য প্ল্যাটফর্মের জন্য
+      }
+    });
   }
 
-  void _shareDua() {
-    // বর্তমান পেজের দোয়া ডেটা ব্যবহার করুন
+  // টেক্সট তৈরির সহায়ক ফাংশন যা সব ফিল্ড গুছিয়ে দেখাবে
+  String _formatDuaText(Map<String, dynamic> dua) {
+    String formattedText = '';
+    final String title = dua['title'] ?? '';
+    final String rules = dua['rules'] ?? '';
+    final String duaArabic = dua['dua_arabic'] ?? '';
+    final String duaBangla = dua['dua_bangla'] ?? ''; // বাংলা উচ্চারণ
+    final String banglaTranslation = dua['bangla_translation'] ?? ''; // নতুন ফিল্ড
+    final String tafseer = dua['tafseer'] ?? ''; // আপনার ডেটায় 'dua' ফিল্ডটি তাফসীর/অর্থ হিসেবে ব্যবহৃত হলে এটি এখানে যোগ করুন
+    final String reference = dua['reference'] ?? '';
+
+    if (title.isNotEmpty) {
+      formattedText += '*** $title ***\n\n';
+    }
+
+    if (rules.isNotEmpty) {
+      formattedText += 'নিয়ম:\n$rules\n\n';
+    }
+
+    if (duaArabic.isNotEmpty) {
+      formattedText += 'আরবি:\n$duaArabic\n\n';
+    }
+
+    if (duaBangla.isNotEmpty) {
+      formattedText += 'বাংলা উচ্চারণ:\n$duaBangla\n\n';
+    }
+
+    // নতুন যোগ করা ফিল্ড
+    if (banglaTranslation.isNotEmpty) {
+      formattedText += 'বাংলা অনুবাদ:\n$banglaTranslation\n\n';
+    }
+
+    if (tafseer.isNotEmpty) {
+      formattedText += 'তাফসীর:\n$tafseer\n\n';
+    }
+
+    if (reference.isNotEmpty) {
+      formattedText += 'রেফারেন্স:\n$reference\n\n';
+    }
+
+    formattedText += '--- IOM Daily Azkar ---\n';
+    if (_appStoreLink.isNotEmpty) {
+      formattedText += 'আমাদের অ্যাপ ডাউনলোড করুন: $_appStoreLink\n';
+    }
+    formattedText += 'আল্লাহ আপনাকে উত্তম প্রতিদান দিন। আমীন!\n';
+
+    return formattedText;
+  }
+
+  // --- কপি ফাংশন ---
+  void _copyToClipboard() {
     final currentDua = widget.duaData[_pageController.page!.round()];
-    final text = currentDua['dua'] ?? '';
-    Share.share(text);
+    final textToCopy = _formatDuaText(currentDua);
+
+    Clipboard.setData(ClipboardData(text: textToCopy)).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('দোয়া কপি করা হয়েছে')),
+      );
+    });
+  }
+
+  // --- শেয়ার ফাংশন ---
+  void _shareDua() {
+    final currentDua = widget.duaData[_pageController.page!.round()];
+    final textToShare = _formatDuaText(currentDua);
+
+    Share.share(textToShare);
   }
 
   void _loadNextDua() {
     if (_pageController.page!.round() < widget.duaData.length - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 300), // অ্যানিমেশনের সময়
-        curve: Curves.easeOut, // অ্যানিমেশন কার্ভ
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -67,8 +140,8 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
   void _loadPreviousDua() {
     if (_pageController.page!.round() > 0) {
       _pageController.previousPage(
-        duration: const Duration(milliseconds: 300), // অ্যানিমেশনের সময়
-        curve: Curves.easeOut, // অ্যানিমেশন কার্ভ
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -79,9 +152,6 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // currentDua আর এখানে সরাসরি দরকার নেই, PageView Builder এর ভেতর থাকবে
-    // final currentDua = widget.duaData[widget.duaIndex]; // এটি দরকার নেই
-
     return Scaffold(
       backgroundColor: Colors.green[50],
       appBar: AppBar(
@@ -90,7 +160,6 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
         title: ValueListenableBuilder<int>(
           valueListenable: ValueNotifier(_pageController.hasClients ? _pageController.page!.round() : widget.duaIndex),
           builder: (context, currentPageIndex, child) {
-            //AppBar এর টাইটেল পরিবর্তনের জন্য ValueListenableBuilder
             final currentDuaForTitle = widget.duaData[currentPageIndex];
             return Text(
               currentDuaForTitle['title'] ?? '',
@@ -123,13 +192,24 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
           ),
         ],
       ),
-      body: PageView.builder( // PageView.builder ব্যবহার করুন
+      body: PageView.builder(
         controller: _pageController,
         itemCount: widget.duaData.length,
+        onPageChanged: (int index) {
+          // প্রয়োজনে এখানে বুকমার্ক স্ট্যাটাস বা অন্যান্য স্টেট আপডেট করুন
+        },
         itemBuilder: (context, index) {
-          final currentDua = widget.duaData[index]; // প্রতিটি পেজের জন্য দোয়া ডেটা
+          final currentDua = widget.duaData[index];
 
-          return SingleChildScrollView( // প্রতিটি পেজ নিজস্ব স্ক্রলযোগ্য হবে
+          // ফিল্ডগুলোর ভ্যালু নিয়ে নিন, যাতে বারবার ম্যাপ অ্যাক্সেস করতে না হয় এবং null চেক করতে সুবিধা হয়।
+          final String rules = currentDua['rules'] ?? '';
+          final String duaArabic = currentDua['dua_arabic'] ?? '';
+          final String duaBangla = currentDua['dua_bangla'] ?? '';
+          final String banglaTranslation = currentDua['bangla_translation'] ?? ''; // নতুন ফিল্ড
+          final String tafseer = currentDua['tafseer'] ?? ''; // এখানে 'dua' ফিল্ডটি তাফসীর হিসেবে ব্যবহৃত হচ্ছে
+          final String reference = currentDua['reference'] ?? '';
+
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -142,15 +222,15 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                   ),
                   onPressed: () {},
                   child: Text(
-                    (index + 1).toString(), // বর্তমান পেজ ইন্ডেক্স
+                    (index + 1).toString(),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                if (currentDua['rules'] != null)
+                if (rules.isNotEmpty) // রুলস থাকলে দেখাবে
                   Text(
-                    currentDua['rules'],
+                    rules,
                     style: const TextStyle(
                       fontSize: 18,
                       color: Colors.green,
@@ -178,25 +258,30 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        currentDua['dua_arabic'] ?? '',
-                        style: TextStyle(
-                          fontSize: fontSize + 2,
-                          fontFamily: 'Scheherazade',
-                          height: 2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        currentDua['dua_bangla'] ?? '',
-                        style: TextStyle(fontSize: fontSize),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      if (currentDua['reference'] != null)
+                      if (duaArabic.isNotEmpty) // আরবি দোয়া থাকলে দেখাবে
                         Text(
-                          "- ${currentDua['reference']}",
+                          duaArabic,
+                          style: TextStyle(
+                            fontSize: fontSize + 2,
+                            fontFamily: 'Scheherazade',
+                            height: 2,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      const SizedBox(height: 8),
+                      if (duaBangla.isNotEmpty) // বাংলা উচ্চারণ থাকলে দেখাবে
+                        Text(
+                          duaBangla,
+                          style: TextStyle(fontSize: fontSize),
+                          textAlign: TextAlign.center,
+                        ),
+                      const SizedBox(height: 10),
+
+
+
+                      if (reference.isNotEmpty) // রেফারেন্স থাকলে দেখাবে
+                        Text(
+                          "- $reference",
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.black54,
@@ -205,23 +290,38 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                           textAlign: TextAlign.center,
                         ),
                       const Divider(),
+                      const SizedBox(height: 14),// নতুন বাংলা অনুবাদ ফিল্ড
+                      if (banglaTranslation.isNotEmpty) // বাংলা অনুবাদ থাকলে দেখাবে
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text(
+                              "বাংলা অনুবাদ", // শিরোনাম
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              banglaTranslation,
+                              style: TextStyle(fontSize: fontSize),
+                              textAlign: TextAlign.justify,
+                            ),
+                            const SizedBox(height: 10),
+                          ],
+                        ),
+
+                      const Divider(),
                       const SizedBox(height: 14),
                       const Text(
                         "তাফসীর",
                         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        currentDua['dua'] ?? '', // এখানে `dua` field টা তাফসীর হিসেবে ব্যবহার হচ্ছে
-                        style: TextStyle(fontSize: fontSize),
-                        textAlign: TextAlign.justify,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        currentDua['tafseer'] ?? '',
-                        style: TextStyle(fontSize: fontSize - 1),
-                        textAlign: TextAlign.justify,
-                      ),
+                      if (tafseer.isNotEmpty) // তাফসীর থাকলে দেখাবে
+                        Text(
+                          tafseer,
+                          style: TextStyle(fontSize: fontSize),
+                          textAlign: TextAlign.justify,
+                        ),
                     ],
                   ),
                 ),
@@ -253,25 +353,26 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                 tooltip: 'শেয়ার করুন',
                 onPressed: _shareDua,
               ),
-              IconButton(
-                icon: Icon(
-                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                  color: Colors.green,
-                ),
-                tooltip: isBookmarked ? 'Bookmark তুলে ফেলুন' : 'Bookmark করুন',
-                onPressed: () {
-                  setState(() {
-                    isBookmarked = !isBookmarked;
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isBookmarked ? 'Bookmark করা হয়েছে' : 'Bookmark তুলে ফেলা হয়েছে',
-                      ),
-                    ),
-                  );
-                },
-              ),
+              // বুকমার্ক ফাংশনালিটি যদি ভবিষ্যতে যোগ করা হয়
+              // IconButton(
+              //   icon: Icon(
+              //     isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              //     color: Colors.green,
+              //   ),
+              //   tooltip: isBookmarked ? 'Bookmark তুলে ফেলুন' : 'Bookmark করুন',
+              //   onPressed: () {
+              //     setState(() {
+              //       isBookmarked = !isBookmarked;
+              //     });
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       SnackBar(
+              //         content: Text(
+              //           isBookmarked ? 'Bookmark করা হয়েছে' : 'Bookmark তুলে ফেলা হয়েছে',
+              //         ),
+              //       ),
+              //     );
+              //   },
+              // ),
               IconButton(
                 icon: const Icon(Icons.arrow_forward, color: Colors.green),
                 tooltip: 'পরবর্তী দোয়া',
