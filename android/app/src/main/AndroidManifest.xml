@@ -78,7 +78,8 @@
             android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
             android:exported="false"
             android:stopWithTask="false"
-            android:foregroundServiceType="mediaPlayback" /> <meta-data
+            android:foregroundServiceType="mediaPlayback"
+            android:permission="android.permission.BIND_JOB_SERVICE" /> <meta-data
         android:name="flutterEmbedding"
         android:value="2" />
     </application>

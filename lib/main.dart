@@ -1,142 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:iomdailyazkar/home_page.dart';
 import 'package:iomdailyazkar/theme/app_text_styles.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:iomdailyazkar/services/notification_service.dart'; // নতুন সার্ভিস ফাইল ইম্পোর্ট করা হয়েছে
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-FlutterLocalNotificationsPlugin();
+// ব্যাকগ্রাউন্ড নোটিফিকেশন রেসপন্স হ্যান্ডলার
+// এটি অবশ্যই `main.dart` এ থাকতে হবে কারণ এটি একটি টপ-লেভেল ফাংশন হতে হবে।
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse notificationResponse) {
+  // আপনার ব্যাকগ্রাউন্ড নোটিফিকেশন হ্যান্ডলিং লজিক এখানে লিখুন।
+
+  // এখানে আপনি SharedPreferences এ ডেটা সেভ করতে পারেন, HTTP রিকোয়েস্ট পাঠাতে পারেন,
+  // অথবা কোনো ডেটা প্রসেস করতে পারেন যা অ্যাপের UI এর সাথে সম্পর্কিত নয়।
+  debugPrint('Background notification tapped: ${notificationResponse.payload}');
+
+  // যদি আপনি NotificationService এর কোনো মেথড থেকে কোনো লজিক কল করতে চান,
+  // তাহলে সেটি NotificationService এ একটি স্ট্যাটিক মেথড হিসেবে ডিফাইন করুন
+  // যা UI এর সাথে সরাসরি সম্পর্কিত নয়।
+  // উদাহরণস্বরূপ:
+  // NotificationService.handleBackgroundPayload(notificationResponse.payload);
+
+
+}
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // নোটিফিকেশন সার্ভিস ইনিশিয়ালাইজ করুন
+  await NotificationService.initializeNotifications();
 
-  try {
-    // Initialize timezone
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+  runApp(const MyApp());
 
-    // Request notification permission (Android 13+)
-    final status = await Permission.notification.request();
-    if (!status.isGranted) {
-      print('Notification permission not granted');
-    }
-
-    // Initialize notification plugin
-    const AndroidInitializationSettings androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initSettings =
-    InitializationSettings(android: androidSettings);
-
-    await flutterLocalNotificationsPlugin.initialize(initSettings);
-
-    // Create notification channels (required for Android 8.0+)
-    await _createNotificationChannels();
-
-    runApp(const MyApp());
-
-    // Schedule notifications
-    await scheduleDailyNotification();
-    await scheduleInstantNotification();
-  } catch (e) {
-    print('Error during initialization: $e');
-  }
-}
-
-Future<void> _createNotificationChannels() async {
-  // Instant notification channel
-  const AndroidNotificationChannel instantChannel = AndroidNotificationChannel(
-    'instant_azkar_channel_id',
-    'Instant Azkar',
-    description: 'Instant reminder to do Azkar',
-    importance: Importance.max,
+  // আপনি চাইলে এখানে ডিফল্ট নোটিফিকেশন শিডিউল করতে পারেন
+  // অথবা ব্যবহারকারীকে UI থেকে সেট করার সুযোগ দিতে পারেন।
+  await NotificationService.scheduleDailyNotification(
+    id: 0,
+    title: 'দৈনিক আজকার reminder ! এখন মিস হয়ে গেলে আর সুযোগ পাবেন না ।',
+    body: 'আপনার আজকের আজকারগুলো সম্পন্ন করুন।',
+    hour: 22, // 22:15 = রাত 10:15
+    minute: 30,
+    payload: 'daily_azkar_type_1',
   );
 
-  // Daily notification channel
-  const AndroidNotificationChannel dailyChannel = AndroidNotificationChannel(
-    'daily_azkar_channel_id',
-    'Daily Azkar',
-    description: 'Reminder to do Azkar every day at 3:15 PM',
-    importance: Importance.max,
+  await NotificationService.scheduleDailyNotification(
+    id: 1,
+    title: 'সকালের আজকার Reminder!',
+    body: 'সকালের আজকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    hour: 6, // 8:00 AM
+    minute: 0,
+    payload: 'daily_azkar_morning',
+  );
+  await NotificationService.scheduleDailyNotification(
+    id: 1,
+    title: 'রাতের আজকার Reminder!',
+    body: 'সকালের আজকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    hour: 18, // 8:00 AM
+    minute: 0,
+    payload: 'daily_azkar_night',
   );
 
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(instantChannel);
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-      AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(dailyChannel);
-}
-
-Future<void> scheduleInstantNotification() async {
-  try {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      1, // Different ID from the daily notification
-      'Azkar Reminder',
-      'Time for daily Azkar 🙏',
-      tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5)),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'instant_azkar_channel_id',
-          'Instant Azkar',
-          channelDescription: 'Instant reminder to do Azkar',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
-    );
-    print('Instant notification scheduled');
-  } catch (e) {
-    print('Error scheduling instant notification: $e');
-  }
-}
-
-Future<void> scheduleDailyNotification() async {
-  try {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Azkar Reminder',
-      'Time for daily Azkar 🙏',
-      _nextInstanceOfThreePM(),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_azkar_channel_id',
-          'Daily Azkar',
-          channelDescription: 'Reminder to do Azkar every day at 3:15 PM',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-    print('Daily notification scheduled');
-  } catch (e) {
-    print('Error scheduling daily notification: $e');
-  }
-}
-
-tz.TZDateTime _nextInstanceOfThreePM() {
-  final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate =
-  tz.TZDateTime(tz.local, now.year, now.month, now.day, 15, 38); // 3:15 PM
-
-  if (scheduledDate.isBefore(now)) {
-    scheduledDate = scheduledDate.add(const Duration(days: 1));
-  }
-
-  print("Next daily notification scheduled at: $scheduledDate");
-  return scheduledDate;
+  await NotificationService.scheduleInstantNotification(
+    id: 2, // ভিন্ন আইডি
+    title: 'অ্যাপ চালু হয়েছে!',
+    body: 'এটি একটি টেস্ট নোটিফিকেশন।',
+    secondsDelay: 5,
+    payload: 'app_start_test',
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -147,18 +74,18 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Iom Daily Azkar',
-        theme: ThemeData(
+      theme: ThemeData(
         fontFamily: AppTextStyles.regular.fontFamily,
         textTheme: TextTheme(
-        displayLarge: AppTextStyles.heading1.copyWith(fontSize: 32.0),
-    headlineMedium: AppTextStyles.bold.copyWith(fontSize: 24.0),
-    bodyLarge: AppTextStyles.regular.copyWith(fontSize: 18.0),
-    bodyMedium: AppTextStyles.regular,
-    bodySmall: AppTextStyles.light,
-    ),
-    useMaterial3: true,
-    ),
-      home: HomeScreen(),
+          displayLarge: AppTextStyles.heading1.copyWith(fontSize: 32.0),
+          headlineMedium: AppTextStyles.bold.copyWith(fontSize: 24.0),
+          bodyLarge: AppTextStyles.regular.copyWith(fontSize: 18.0),
+          bodyMedium: AppTextStyles.regular,
+          bodySmall: AppTextStyles.light,
+        ),
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(),
     );
   }
 }

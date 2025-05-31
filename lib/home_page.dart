@@ -347,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () async {
               final Uri emailLaunchUri = Uri(
                 scheme: 'mailto',
-                path: 'siamuldiu@gmail.com',
+                path: 'mdsiamulislams@gmail.com',
                 query: Uri.encodeFull('subject=Feedback for IOM Daily Azkar App'),
               );
 
