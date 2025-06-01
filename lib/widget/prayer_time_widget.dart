@@ -490,7 +490,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFF2e7d32), // গাঢ় সবুজ
         borderRadius: BorderRadius.circular(16),
@@ -510,8 +510,10 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.location_on, color: Colors.white70, size: 20),
-              const SizedBox(width: 8),
+              const Icon(Icons.location_on, color: Colors.white70, size: 16),
+              SizedBox(
+                width: 10,
+              ),
               Flexible(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -544,7 +546,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
           Column(
             children: [
               Text(
-                style: AppTextStyles.regular.copyWith(fontSize: 16, color: Colors.white70),
+                style: AppTextStyles.regular.copyWith(fontSize: 13, color: Colors.white70),
                 (remainingTime.isNegative)
                     ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
                     : 'পরবর্তী ওয়াক্ত :' + nextPrayerName,
@@ -553,7 +555,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               const SizedBox(height: 8),
               Text(
                 formatBanglaDuration(remainingTime),
-                style: AppTextStyles.bold.copyWith(fontSize: 20, color: Colors.white), // আরও বড় ফন্ট
+                style: AppTextStyles.bold.copyWith(fontSize: 16, color: Colors.white), // আরও বড় ফন্ট
                 textAlign: TextAlign.center,
               ),
             ],
@@ -569,7 +571,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 3.2, // অনুপাত কমালে height কমবে
+              childAspectRatio: 2.5, // অনুপাত কমালে height কমবে
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
@@ -613,21 +615,22 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                       Text(
                         name,
                         style:
-                        AppTextStyles.bold.copyWith(fontSize: 18, color: Colors.white),
+                        AppTextStyles.bold.copyWith(fontSize: 14, color: Colors.white),
                       ),
-                      const SizedBox(height: 4),
                       Text(
                         '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
                         style: AppTextStyles.regular
                             .copyWith(fontSize: 13, color: Colors.white70),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 2,
+                      ),
                       LinearProgressIndicator(
                         value: progress,
                         backgroundColor: Colors.white.withOpacity(0.3),
                         valueColor: AlwaysStoppedAnimation<Color>(progressBarColor),
                         borderRadius: BorderRadius.circular(5),
-                        minHeight: 6,
+                        minHeight: 4,
                       ),
                     ],
                   ),

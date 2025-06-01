@@ -189,43 +189,57 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
           // ট্যাগ ফিল্টার ড্রপডাউন
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0), // Padding ঠিক করা হয়েছে
-            child: DropdownButtonFormField<String>(
-              value: _selectedTag,
-              decoration: InputDecoration(
-                labelText: 'ট্যাগ নির্বাচন করুন',
-                labelStyle: TextStyle(color: AppColors.primaryGreen),
-                prefixIcon: Icon(Icons.filter_list, color: AppColors.primaryGreen),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.primaryGreen),
+            child: Row(
+              children: [
+                const Text(
+                  'ট্যাগ:',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: AppColors.primaryGreen, width: 2),
+                const SizedBox(width: 10), // ট্যাগের টেক্সট ও ড্রপডাউন এর মাঝে স্পেস
+                Expanded(
+                  child: DropdownButton<String>(
+                    value: _selectedTag,
+                    hint: const Text('সব'),
+                    isExpanded: true,
+                    underline: Container(), // ড্রপডাউন এর নিচের লাইন সরিয়ে দেয়া হয়েছে
+                    items: ['All', ..._uniqueTags].map((String tag) {
+                      return DropdownMenuItem<String>(
+                        value: tag,
+                        child: Text(tag),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedTag = newValue;
+                        _applyFilters(); // ট্যাগ পরিবর্তন হলে ফিল্টার প্রয়োগ করুন
+                      });
+                    },
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder( // এনেবল থাকাকালে বর্ডার
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
+                SizedBox(
+                  width: 10, // ড্রপডাউন ও আইকন বাটনের মাঝে স্পেস
                 ),
-              ),
-              items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('সব ট্যাগ'),
+                // Icon button for get questiio
+                IconButton(
+                  icon:Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.question_answer, color: AppColors.primaryGreen),
+                      const SizedBox(width: 4), // আইকন ও টেক্সট এর মাঝে স্পেস
+                      const Text('প্রশ্ন করুন', style: TextStyle(color: AppColors.primaryGreen)),
+                    ],
+                  ),
+                  onPressed: () {
+                    // Open external link or perform action
+                    const url = 'https://ifatwa.info/rules'; // আপনার প্রশ্ন করার লিঙ্ক এখানে দিন
+                    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((error) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('লিঙ্ক খুলতে ব্যর্থ হয়েছে।')),
+                      );
+                    });
+                  },
                 ),
-                ..._uniqueTags.map((tag) {
-                  return DropdownMenuItem(
-                    value: tag,
-                    child: Text(tag),
-                  );
-                }).toList(),
               ],
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedTag = newValue;
-                  _applyFilters();
-                });
-              },
             ),
           ),
           Expanded(

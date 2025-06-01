@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/widget/badge_info_dialog.dart';
 import 'package:iomdailyazkar/widget/prayer_time_widget.dart';
 import 'package:iomdailyazkar/screen/about_app_screen.dart';
 import 'package:iomdailyazkar/screen/i_fatwa_list_screen.dart';
@@ -11,13 +12,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 import 'screen/daily_azkar_task_screen.dart';
-import 'const/constants.dart';
+import 'const/constants.dart'; // Ensure this file exists and has AppColors
 import 'screen/dua_list_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'widget/daily_task_widget.dart';
 
+// Dummy AppColors for demonstration if not in constants.dart
+// Ensure AppColors is properly defined in your constants.dart file.
+// If it's not, uncomment this:
+/*
+class AppColors {
+  static const Color primaryGreen = Color(0xFF4CAF50); // Example green
+  static const Color white = Colors.white;
+}
+*/
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -30,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
-  List <dynamic> fatwaData = [];
+  List<dynamic> fatwaData = [];
   List<dynamic> data = [];
   bool isLoading = true;
   int randomIndex = 0;
@@ -38,12 +48,16 @@ class _HomeScreenState extends State<HomeScreen> {
   late Timer _dailyResetTimer;
   DateTime? _lastResetDate;
 
+  // Badge system state
+  int _userLevel = 1; // User's current level, starts at 1
+  int _consecutiveDaysCompleted = 0; // Track consecutive task completions
+
   int generateRandomIndex(int max) => (DateTime.now().millisecondsSinceEpoch % max).toInt();
 
   @override
   void initState() {
     super.initState();
-    _initializeDailyTasks();
+    _initializeDailyTasks(); // This now also loads user level
     loadDataFromDevice();
   }
 
@@ -58,16 +72,25 @@ class _HomeScreenState extends State<HomeScreen> {
     _lastResetDate = DateTime.tryParse(prefs.getString('lastResetDate') ?? '');
     _allTasksCompleted = prefs.getBool('allTasksCompleted') ?? false;
 
+    // Load user level and consecutive days
+    _userLevel = prefs.getInt('userLevel') ?? 1;
+    _consecutiveDaysCompleted = prefs.getInt('consecutiveDaysCompleted') ?? 0;
+
     // Check if we need to reset (new day after 1AM)
-    _checkAndResetDailyTasks();
+    await _checkAndResetDailyTasks(); // Await this to ensure state is updated before build
 
     // Set up timer to check every hour
     _dailyResetTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       _checkAndResetDailyTasks();
     });
+
+    setState(() {
+      // Update state after loading everything
+    });
   }
 
-  void _checkAndResetDailyTasks() async {
+  Future<void> _checkAndResetDailyTasks() async {
+    final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final resetTime = DateTime(now.year, now.month, now.day, 1); // 1 AM
@@ -88,15 +111,50 @@ class _HomeScreenState extends State<HomeScreen> {
     await prefs.setBool('allTasksCompleted', false);
     await prefs.setString('lastResetDate', now.toString());
 
+    // If tasks are reset, consecutive days should be reset too.
+    // This is crucial for leveling up based on consistent activity.
+    await prefs.setInt('consecutiveDaysCompleted', 0);
+
     setState(() {
       _allTasksCompleted = false;
+      _consecutiveDaysCompleted = 0;
+      // Note: _userLevel does not reset here, it only increases.
+      // If you want it to decrease, you need to add specific logic for that.
     });
   }
 
+  // Helper function to update user level based on consecutive task completions
+  Future<void> _updateUserLevel() async {
+    final prefs = await SharedPreferences.getInstance();
+    int newLevel = 1;
 
-  // lib/screen/home_screen.dart
+    if (_consecutiveDaysCompleted >= 15) {
+      newLevel = 5;
+    } else if (_consecutiveDaysCompleted >= 10) {
+      newLevel = 4;
+    } else if (_consecutiveDaysCompleted >= 5) {
+      newLevel = 3;
+    } else if (_consecutiveDaysCompleted >= 1) { // Assuming 1 day completed moves to level 2
+      newLevel = 2;
+    } else {
+      newLevel = 1;
+    }
 
-// ... অন্যান্য কোড ...
+    if (newLevel > _userLevel) {
+      setState(() {
+        _userLevel = newLevel;
+      });
+      await prefs.setInt('userLevel', _userLevel); // Save the new level
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("আপনি নতুন লেভেলে পৌঁছেছেন: লেভেল $_userLevel!"),
+            backgroundColor: AppColors.primaryGreen,
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> loadDataFromDevice() async {
     final prefs = await SharedPreferences.getInstance();
@@ -105,22 +163,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final storedHadithList = prefs.getString('hadithList');
       final storedData = prefs.getString('data');
       final storedDuaData = prefs.getString('duaData');
-      // এই লাইনটি পরিবর্তন করুন:
-      final storedFatwaData = prefs.getString('ifatwaData'); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
-
+      final storedFatwaData = prefs.getString('ifatwaData');
 
       if (storedCategories != null &&
           storedHadithList != null &&
           storedData != null &&
           storedDuaData != null &&
-          storedFatwaData != null
-      ) {
+          storedFatwaData != null) {
         categories = json.decode(storedCategories);
         hadithList = json.decode(storedHadithList);
         data = json.decode(storedData);
         duaData = json.decode(storedDuaData);
-        // এই লাইনটি পরিবর্তন করুন:
-        fatwaData = json.decode(storedFatwaData); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
+        fatwaData = json.decode(storedFatwaData);
 
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
@@ -134,12 +188,6 @@ class _HomeScreenState extends State<HomeScreen> {
       await fetchAndStoreData();
     }
   }
-
-// ... বাকি কোড ...
-
-  // lib/screen/home_screen.dart
-
-// ... অন্যান্য কোড ...
 
   Future<void> fetchAndStoreData() async {
     setState(() => isLoading = true);
@@ -155,16 +203,14 @@ class _HomeScreenState extends State<HomeScreen> {
         await prefs.setString('hadithList', json.encode(result['hadith'] ?? []));
         await prefs.setString('duaData', json.encode(result['dua'] ?? []));
         await prefs.setString('data', json.encode(result['data'] ?? []));
-        // এই লাইনটি পরিবর্তন করুন:
-        await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? [])); // <--- fatwaData থেকে ifatwaData তে পরিবর্তন করা হয়েছে
+        await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? []));
 
         categories = result['categories'] ?? [];
         hadithList = result['hadith'] ?? [];
         duaData = result['dua'] ?? [];
-        // এই লাইনটি পরিবর্তন করুন:
-        fatwaData = result['ifatwa'] ?? []; // <--- fatwaData থেকে ifatwa তে পরিবর্তন করা হয়েছে
-
+        fatwaData = result['ifatwa'] ?? [];
         data = result['data'] ?? [];
+
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
         }
@@ -175,29 +221,65 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } catch (e) {
       print("Fetch error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("ডেটা লোড করতে ব্যর্থ হয়েছে। ইন্টারনেট চেক করুন।"),
-      ));
+      if(mounted) { // Check if the widget is still in the tree before showing SnackBar
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("ডেটা লোড করতে ব্যর্থ হয়েছে। ইন্টারনেট চেক করুন।"),
+        ));
+      }
       setState(() => isLoading = false);
     }
   }
 
-// ... বাকি কোড ...
-
   Icon getIconFromName(String iconName) {
     switch (iconName) {
       case 'sunny_snowing':
-        return Icon(Icons.wb_sunny, color: AppColors.white, size: 40);
+        return const Icon(Icons.wb_sunny, color: AppColors.white, size: 40);
       case 'healing':
-        return Icon(Icons.healing, color: AppColors.white, size: 40);
+        return const Icon(Icons.healing, color: AppColors.white, size: 40);
       case 'self_improvement':
-        return Icon(Icons.self_improvement, color: AppColors.white, size: 40);
+        return const Icon(Icons.self_improvement, color: AppColors.white, size: 40);
       case 'access_time':
-        return Icon(Icons.access_time, color: AppColors.white, size: 40);
+        return const Icon(Icons.access_time, color: AppColors.white, size: 40);
       default:
-        return Icon(Icons.help_outline, color: AppColors.white, size: 40);
+        return const Icon(Icons.help_outline, color: AppColors.white, size: 40);
     }
   }
+
+  // --- Badge System Helper Functions (Corrected and Consolidated) ---
+  IconData _getBadgeIcon(int level) {
+    switch (level) {
+      case 1:
+        return Icons.star_border; // Level 1: An outline star
+      case 2:
+        return Icons.star; // Level 2: A filled star
+      case 3:
+        return Icons.military_tech; // Level 3: A medal
+      case 4:
+        return Icons.workspace_premium; // Level 4: A premium badge
+      case 5:
+        return Icons.emoji_events; // Level 5: A trophy
+      default:
+        return Icons.help_outline; // Default for unexpected levels
+    }
+  }
+
+  Color _getBadgeColor(int level) {
+    switch (level) {
+      case 1:
+        return Colors.white; // Or a subtle grey for level 1
+      case 2:
+        return Colors.yellow;
+      case 3:
+        return Colors.orangeAccent; // Bronze-like
+      case 4:
+        return Colors.blueGrey.shade200; // Silver-like
+      case 5:
+        return Colors.amber; // Gold
+      default:
+        return AppColors.white; // Fallback color
+    }
+  }
+  // --- End Badge System Helper Functions ---
 
   @override
   Widget build(BuildContext context) {
@@ -208,10 +290,11 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.primaryGreen,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
         centerTitle: true,
-        title: Text("IOM Daily Azkars",
+        title: const Text(
+          "IOM Daily Azkars",
           style: TextStyle(
             fontSize: 20,
             color: AppColors.white,
@@ -220,8 +303,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: AppColors.white),
+            icon: const Icon(Icons.refresh, color: AppColors.white),
             onPressed: fetchAndStoreData,
+          ),
+          // Display the badge based on the user's current level
+          // Make the badge icon clickable
+          InkWell( // Use InkWell for a ripple effect on tap
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return BadgeInfoDialog(currentUserLevel: _userLevel);
+                },
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8.0), // Add some padding
+              child: Icon(
+                _getBadgeIcon(_userLevel), // Get the icon based on the level
+                color: _getBadgeColor(_userLevel), // Get the color based on the level
+                size: 28, // Adjust size as needed
+              ),
+            ),
           ),
         ],
       ),
@@ -231,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onRefresh: fetchAndStoreData,
           color: AppColors.primaryGreen,
           child: ListView(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             children: [
               if (!_allTasksCompleted) // Only show if tasks aren't completed
                 GestureDetector(
@@ -242,17 +345,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
 
                     if (result != null && result) {
+                      // If tasks were completed, update consecutive days and check level
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('allTasksCompleted', true); // Mark as completed for today
+
                       setState(() {
                         _allTasksCompleted = true;
+                        _consecutiveDaysCompleted++; // Increment consecutive days
                       });
+                      await prefs.setInt('consecutiveDaysCompleted', _consecutiveDaysCompleted);
+                      await _updateUserLevel(); // Check if user leveled up
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                     decoration: BoxDecoration(
                       color: AppColors.primaryGreen,
                       borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 6,
@@ -260,16 +370,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    child: DailyTaskWidget(),
+                    child: const DailyTaskWidget(),
                   ),
                 ),
-              SizedBox(height: 10),
-              CombinedPrayerTimesWidget(),
-              SizedBox(height: 16),
+              const SizedBox(height: 10),
+              const CombinedPrayerTimesWidget(),
+              const SizedBox(height: 16),
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               isLoading ? _buildShimmerGrid() : _buildCategoryGrid(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               isLoading ? _buildShimmerCard() : _buildFatwaSection(),
             ],
           ),
@@ -278,25 +388,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildDrawer() {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: AppColors.primaryGreen),
+            decoration: const BoxDecoration(color: AppColors.primaryGreen),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
+                const Center(
                   child: CircleAvatar(
                     radius: 40,
                     backgroundImage: AssetImage('assets/logo.png'),
                   ),
                 ),
-                SizedBox(height: 8),
-                Text('স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ', textAlign: TextAlign.center, style: AppTextStyles.bold.copyWith(
+                const SizedBox(height: 8),
+                Text('স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ', textAlign: TextAlign.center, style: AppTextStyles.bold.copyWith(
                   color: Colors.white,
                   fontSize: 16,
                 )),
@@ -304,10 +413,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.apps), // নতুন আইকন
-            title: const Text('আমাদের অন্যান্য অ্যাপস'), // নতুন শিরোনাম
+            leading: const Icon(Icons.apps),
+            title: const Text('আমাদের অন্যান্য অ্যাপস'),
             onTap: () {
-              Navigator.pop(context); // ড্রয়ার বন্ধ করুন
+              Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const OurAppsScreen()),
@@ -315,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.share),
+            leading: const Icon(Icons.share),
             title: Text('অ্যাপ শেয়ার করুন', style: AppTextStyles.regular),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
@@ -326,23 +435,27 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           ListTile(
-            leading: Icon(Icons.star),
+            leading: const Icon(Icons.star),
             title: Text('রেটিং দিন', style: AppTextStyles.regular,),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
               final packageName = info.packageName;
               final url = 'https://play.google.com/store/apps/details?id=$packageName';
 
+              // Using canLaunchUrl and launchUrl directly as launchUrl is deprecated
               if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
               } else {
-                // fallback or show error
-                print("Could not launch Play Store");
+                if(mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Play Store খুলতে ব্যর্থ হয়েছে।')),
+                  );
+                }
               }
             },
           ),
           ListTile(
-            leading: Icon(Icons.feedback),
+            leading: const Icon(Icons.feedback),
             title: Text('ফিডব্যাক দিন', style: AppTextStyles.regular),
             onTap: () async {
               final Uri emailLaunchUri = Uri(
@@ -354,12 +467,16 @@ class _HomeScreenState extends State<HomeScreen> {
               if (await canLaunchUrl(emailLaunchUri)) {
                 await launchUrl(emailLaunchUri);
               } else {
-                print("Could not launch email app");
+                if(mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('ইমেইল অ্যাপ খুলতে ব্যর্থ হয়েছে।')),
+                  );
+                }
               }
             },
           ),
           ListTile(
-            leading: Icon(Icons.info),
+            leading: const Icon(Icons.info),
             title: Text('অ্যাপ সম্পর্কে', style: AppTextStyles.regular),
             onTap: (){
               Navigator.push(
@@ -375,33 +492,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildHadithCard(String hadithText, String hadithRef) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))],
       ),
       child: Column(
         children: [
           Text(
             hadithText,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 16,
               color: AppColors.primaryGreen,
               fontStyle: FontStyle.italic,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             "হাদিস রেফারেন্স: $hadithRef",
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: AppColors.primaryGreen),
+            style: const TextStyle(fontSize: 14, color: AppColors.primaryGreen),
           ),
           Align(
             alignment: Alignment.centerRight,
             child: IconButton(
-              icon: Icon(Icons.share, color: AppColors.primaryGreen),
+              icon: const Icon(Icons.share, color: AppColors.primaryGreen),
               onPressed: () => Share.share("$hadithText\n\nহাদিস: $hadithRef"),
             ),
           ),
@@ -416,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       children: categories.map((category) {
         final String title = category["title"] ?? "শিরোনাম নেই";
         final String tag = category["tag"] ?? "";
@@ -432,21 +549,27 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           },
           child: AnimatedContainer(
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
             decoration: BoxDecoration(
               color: AppColors.primaryGreen,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 3))],
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 6,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 getIconFromName(iconName),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
                   title,
-                  style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w500, fontSize: 15),
+                  style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.w500, fontSize: 15),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -461,21 +584,20 @@ class _HomeScreenState extends State<HomeScreen> {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16), // আরও গোলাকার কোণা
+        borderRadius: BorderRadius.circular(16),
       ),
-      elevation: 6, // একটু বেশি শ্যাডো
-      shadowColor: Colors.green.withOpacity(0.3), // সবুজ রঙের শ্যাডো
-      child: InkWell( // পুরো কার্ডটিকে ক্লিকযোগ্য করতে
+      elevation: 6,
+      shadowColor: Colors.green.withOpacity(0.3),
+      child: InkWell(
         onTap: () {
-          // এখানে IFatwaListScreen-এ নেভিগেট করুন এবং fatwaData পাস করুন
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => IFatwaListScreen(fatwaData: fatwaData), // fatwaData পাস করা হচ্ছে
+              builder: (context) => IFatwaListScreen(fatwaData: fatwaData),
             ),
           );
         },
-        borderRadius: BorderRadius.circular(16), // InkWell এর জন্য একই বর্ডার রেডিয়াস
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
@@ -484,11 +606,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.1), // হালকা সবুজ ব্যাকগ্রাউন্ড
+                  color: AppColors.primaryGreen.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.book_outlined, // ফতোয়ার জন্য উপযুক্ত আইকন
+                  Icons.book_outlined,
                   color: AppColors.primaryGreen,
                   size: 28,
                 ),
@@ -499,7 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "ফতোয়া বিভাগ", // আরও স্পষ্ট শিরোনাম
+                      "ফতোয়া বিভাগ",
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -508,7 +630,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।", // ছোট ও স্পষ্ট বিবরণ
+                      "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।",
                       style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -517,7 +639,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const Icon(
-                Icons.arrow_forward_ios, // Arrow আইকন
+                Icons.arrow_forward_ios,
                 color: AppColors.primaryGreen,
                 size: 20,
               ),
@@ -548,7 +670,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
       shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       children: List.generate(4, (index) {
         return Shimmer.fromColors(
           baseColor: Colors.grey[300]!,
@@ -565,4 +687,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

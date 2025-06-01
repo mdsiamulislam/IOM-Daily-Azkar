@@ -48,6 +48,34 @@ Future<void> main() async {
     minute: 0,
     payload: 'daily_azkar_morning',
   );
+
+  await NotificationService.scheduleDailyNotification(
+    id: 1,
+    title: '8:10',
+    body: 'সকালের আযকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    hour: 9, // 8:00 AM
+    minute: 15,
+    payload: 'daily_azkar_morning',
+  );
+
+  await NotificationService.scheduleDailyNotification(
+    id: 1,
+    title: '10:10',
+    body: 'সকালের আযকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    hour: 10, // 8:00 AM
+    minute: 10,
+    payload: 'daily_azkar_morning',
+  );
+
+  await NotificationService.scheduleDailyNotification(
+    id: 1,
+    title: '10:20',
+    body: 'সকালের আযকারগুলো সম্পন্ন করতে ভুলবেন না।',
+    hour: 10, // 8:00 AM
+    minute: 20,
+    payload: 'daily_azkar_morning',
+  );
+
   await NotificationService.scheduleDailyNotification(
     id: 1,
     title: 'রাতের আযকার Reminder!',
