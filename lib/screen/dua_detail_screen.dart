@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart'; // নিশ্চিত করুন যে এটি ইম্পোর্ট করা আছে
 
 class DuaDetailScreen extends StatefulWidget {
   final int duaIndex;
@@ -19,9 +18,11 @@ class DuaDetailScreen extends StatefulWidget {
 }
 
 class _DuaDetailScreenState extends State<DuaDetailScreen> {
-  bool isBookmarked = false; // বুকমার্ক ফাংশনালিটি যদি ভবিষ্যতে যোগ করা হয়
-  double fontSize = 20.0;
+  bool isBookmarked = false;
+  double arabicFontSize = 22.0;
+  double banglaFontSize = 18.0;
   late PageController _pageController;
+  ValueNotifier<int>? _currentPageNotifier; // বর্তমান পৃষ্ঠা ট্র্যাক করার জন্য, nullable করা হয়েছে
   String _appPackageName = ''; // প্যাকেজ নাম সংরক্ষণের জন্য
   String _appStoreLink = ''; // প্লে স্টোর/অ্যাপ স্টোর লিঙ্ক সংরক্ষণের জন্য
 
@@ -29,12 +30,14 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.duaIndex);
+    _currentPageNotifier = ValueNotifier<int>(widget.duaIndex); // বর্তমান পৃষ্ঠা দিয়ে ইনিশিয়ালাইজ করুন
     _loadPackageInfo();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _currentPageNotifier?.dispose(); // nullable হওয়ার কারণে সেফ কল (?) ব্যবহার করা হয়েছে
     super.dispose();
   }
 
@@ -55,7 +58,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
     });
   }
 
-  // টেক্সট তৈরির সহায়ক ফাংশন যা সব ফিল্ড গুছিয়ে দেখাবে
+  // টেক্সট তৈরির সহায়ক ফাংশন যা সব ফিল্ড গুছিয়ে দেখাবে
   String _formatDuaText(Map<String, dynamic> dua) {
     String formattedText = '';
     final String title = dua['title'] ?? '';
@@ -157,12 +160,32 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.green[700],
-        title: ValueListenableBuilder<int>(
-          valueListenable: ValueNotifier(_pageController.hasClients ? _pageController.page!.round() : widget.duaIndex),
+        title: _currentPageNotifier == null
+            ? const Text(
+          'Loading Dua...', // Fallback title if _currentPageNotifier is null
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        )
+            : ValueListenableBuilder<int>(
+          valueListenable: _currentPageNotifier!, // Null check করা হয়েছে, তাই এখানে ! ব্যবহার করা নিরাপদ
           builder: (context, currentPageIndex, child) {
+            // নিশ্চিত করুন যে currentPageIndex বৈধ সীমার মধ্যে আছে
+            if (currentPageIndex < 0 || currentPageIndex >= widget.duaData.length) {
+              return const Text(
+                'Invalid Dua',
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            }
             final currentDuaForTitle = widget.duaData[currentPageIndex];
             return Text(
-              currentDuaForTitle['title'] ?? '',
+              currentDuaForTitle['title'] ?? 'দোয়া ${currentPageIndex + 1}',
               style: const TextStyle(
                 fontSize: 20,
                 color: Colors.white,
@@ -177,7 +200,8 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
             tooltip: 'ফন্ট বড় করুন',
             onPressed: () {
               setState(() {
-                fontSize += 2;
+                arabicFontSize += 2;
+                banglaFontSize += 2;
               });
             },
           ),
@@ -186,7 +210,10 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
             tooltip: 'ফন্ট ছোট করুন',
             onPressed: () {
               setState(() {
-                if (fontSize > 12) fontSize -= 2;
+                if (arabicFontSize > 10 && banglaFontSize > 10) {
+                  arabicFontSize -= 2;
+                  banglaFontSize -= 2;
+                }
               });
             },
           ),
@@ -196,6 +223,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
         controller: _pageController,
         itemCount: widget.duaData.length,
         onPageChanged: (int index) {
+          _currentPageNotifier?.value = index; // পৃষ্ঠা পরিবর্তন হলে ValueNotifier আপডেট করুন
           // প্রয়োজনে এখানে বুকমার্ক স্ট্যাটাস বা অন্যান্য স্টেট আপডেট করুন
         },
         itemBuilder: (context, index) {
@@ -262,9 +290,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                         Text(
                           duaArabic,
                           style: TextStyle(
-                            fontSize: fontSize + 2,
-                            fontFamily: 'Scheherazade',
-                            height: 2,
+                            fontSize: arabicFontSize,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -272,7 +298,10 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                       if (duaBangla.isNotEmpty) // বাংলা উচ্চারণ থাকলে দেখাবে
                         Text(
                           duaBangla,
-                          style: TextStyle(fontSize: fontSize),
+                          style: TextStyle(
+                            fontSize: banglaFontSize,
+                            height: 1.5,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       const SizedBox(height: 10),
@@ -302,7 +331,9 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                             const SizedBox(height: 8),
                             Text(
                               banglaTranslation,
-                              style: TextStyle(fontSize: fontSize),
+                              style: TextStyle(
+                                fontSize: banglaFontSize,
+                              ),
                               textAlign: TextAlign.justify,
                             ),
                             const SizedBox(height: 10),
@@ -311,15 +342,17 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
 
                       const Divider(),
                       const SizedBox(height: 14),
-                      const Text(
-                        "তাফসীর",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
+                      // const Text(
+                      //   "তাফসীর/অর্থ", // শিরোনাম
+                      //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      // ),
                       const SizedBox(height: 8),
                       if (tafseer.isNotEmpty) // তাফসীর থাকলে দেখাবে
                         Text(
                           tafseer,
-                          style: TextStyle(fontSize: fontSize),
+                          style: TextStyle(
+                            fontSize: banglaFontSize,
+                          ),
                           textAlign: TextAlign.justify,
                         ),
                     ],

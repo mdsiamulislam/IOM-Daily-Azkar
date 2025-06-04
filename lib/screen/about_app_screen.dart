@@ -164,9 +164,9 @@ class AboutAppScreen extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  const Text( // const যোগ করা হয়েছে
-                    '© IOM Daily Azkar 2025 - All rights reserved',
-                    style: TextStyle(
+                  Text( // const যোগ করা হয়েছে
+                    '© IOM Daily Azkar ${ DateTime.now().year } - All rights reserved',
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Colors.black87,

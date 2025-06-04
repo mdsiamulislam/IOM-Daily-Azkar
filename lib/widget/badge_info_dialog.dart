@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:iomdailyazkar/const/constants.dart'; // AppColors এর জন্য
+import 'package:iomdailyazkar/const/constants.dart';
 
 class BadgeInfoDialog extends StatelessWidget {
   final int currentUserLevel;
+  final int currentDayCount;
 
-  const BadgeInfoDialog({Key? key, required this.currentUserLevel}) : super(key: key);
+  const BadgeInfoDialog({Key? key, required this.currentUserLevel, required this.currentDayCount}) : super(key: key);
 
-  // এই ফাংশনগুলি HomeScreen থেকে কপি করা হয়েছে যাতে এখানে ব্যাজ আইকন এবং রঙ দেখানো যায়
   IconData _getBadgeIcon(int level) {
     switch (level) {
       case 1:
@@ -41,19 +41,44 @@ class BadgeInfoDialog extends StatelessWidget {
     }
   }
 
+  int _getDaysRequiredForLevel(int level) {
+    switch (level) {
+      case 1: return 0;
+      case 2: return 1;
+      case 3: return 5;
+      case 4: return 10;
+      case 5: return 15;
+      default: return 0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
-        "আপনার ব্যাজ সিস্টেম",
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: AppColors.primaryGreen,
-          fontWeight: FontWeight.bold,
-          fontSize: 22,
-        ),
+      title: Column(
+        children: [
+          const Text(
+            "আপনার ব্যাজ সিস্টেম",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.primaryGreen,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            "আপনার বর্তমান ধারাবাহিক আজকার: $currentDayCount দিন",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -72,6 +97,7 @@ class BadgeInfoDialog extends StatelessWidget {
               title: "নতুন শিক্ষার্থী",
               days: "০ দিন",
               description: "আজকার শুরু করার জন্য এই ব্যাজ।",
+              currentDayCount: currentDayCount,
             ),
             _buildLevelRow(
               context,
@@ -79,6 +105,7 @@ class BadgeInfoDialog extends StatelessWidget {
               title: "নিয়মিত অভ্যাসকারী",
               days: "১+ ধারাবাহিক দিন",
               description: "নিয়মিত আজকার সম্পন্ন করার প্রথম ধাপ।",
+              currentDayCount: currentDayCount,
             ),
             _buildLevelRow(
               context,
@@ -86,6 +113,7 @@ class BadgeInfoDialog extends StatelessWidget {
               title: "নিবেদিতপ্রাণ",
               days: "৫+ ধারাবাহিক দিন",
               description: "আপনি আজকারের প্রতি নিবেদিতপ্রাণ।",
+              currentDayCount: currentDayCount,
             ),
             _buildLevelRow(
               context,
@@ -93,6 +121,7 @@ class BadgeInfoDialog extends StatelessWidget {
               title: "উন্নত সাধক",
               days: "১০+ ধারাবাহিক দিন",
               description: "আপনার অভ্যাস এখন অনেক উন্নত।",
+              currentDayCount: currentDayCount,
             ),
             _buildLevelRow(
               context,
@@ -100,6 +129,7 @@ class BadgeInfoDialog extends StatelessWidget {
               title: "ওস্তাদ",
               days: "১৫+ ধারাবাহিক দিন",
               description: "আজকারের ক্ষেত্রে আপনি একজন ওস্তাদ!",
+              currentDayCount: currentDayCount,
             ),
           ],
         ),
@@ -123,8 +153,47 @@ class BadgeInfoDialog extends StatelessWidget {
     required String title,
     required String days,
     required String description,
+    required int currentDayCount,
   }) {
+    double progress = 0.0;
+    String progressText = "";
     final bool isCurrentLevel = level == currentUserLevel;
+
+    if (level < currentUserLevel) {
+      // Past badges are always full
+      progress = 1.0;
+      progressText = "অর্জন হয়েছে";
+    } else if (level == currentUserLevel) {
+      // Current badge is considered full, text shows progress towards next
+      progress = 1.0;
+      if (level == 5) { // Highest level
+        progressText = "আপনি সর্বোচ্চ লেভেলে আছেন!";
+      } else {
+        final int daysRequiredForNextLevel = _getDaysRequiredForLevel(level + 1);
+        final int remainingDaysToNextLevel = daysRequiredForNextLevel - currentDayCount;
+
+        if (remainingDaysToNextLevel <= 0) {
+          progressText = "পরবর্তী ব্যাজ অর্জনের জন্য প্রস্তুত!";
+        } else {
+          progressText = "পরবর্তী ব্যাজের জন্য আর $remainingDaysToNextLevel দিন বাকি";
+        }
+      }
+    } else { // level > currentUserLevel (future badges)
+      final int daysRequiredForFutureLevel = _getDaysRequiredForLevel(level);
+      if (daysRequiredForFutureLevel > 0) {
+        progress = (currentDayCount / daysRequiredForFutureLevel).clamp(0.0, 1.0);
+        int remainingDays = daysRequiredForFutureLevel - currentDayCount;
+        if (remainingDays > 0) {
+          progressText = "এই ব্যাজের জন্য আর $remainingDays দিন বাকি";
+        } else {
+          progressText = "এই ব্যাজ অর্জনের জন্য প্রস্তুত!";
+        }
+      } else {
+        progress = 0.0;
+        progressText = "";
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(12),
@@ -163,6 +232,28 @@ class BadgeInfoDialog extends StatelessWidget {
                   description,
                   style: const TextStyle(fontSize: 14, color: Colors.black54),
                 ),
+                const SizedBox(height: 8),
+                // Show progress bar and text only if there's meaningful progress or it's current/future level
+                if (progress > 0 || isCurrentLevel || level > currentUserLevel)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        progressText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),

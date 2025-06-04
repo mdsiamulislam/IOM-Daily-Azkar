@@ -12,22 +12,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 import 'screen/daily_azkar_task_screen.dart';
-import 'const/constants.dart'; // Ensure this file exists and has AppColors
+import 'const/constants.dart';
 import 'screen/dua_list_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'widget/daily_task_widget.dart';
 
-// Dummy AppColors for demonstration if not in constants.dart
-// Ensure AppColors is properly defined in your constants.dart file.
-// If it's not, uncomment this:
-/*
-class AppColors {
-  static const Color primaryGreen = Color(0xFF4CAF50); // Example green
-  static const Color white = Colors.white;
-}
-*/
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -237,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'healing':
         return const Icon(Icons.healing, color: AppColors.white, size: 40);
       case 'self_improvement':
-        return const Icon(Icons.self_improvement, color: AppColors.white, size: 40);
+        return const Icon(Icons.health_and_safety, color: AppColors.white, size: 40);
       case 'access_time':
         return const Icon(Icons.access_time, color: AppColors.white, size: 40);
       default:
@@ -313,7 +304,10 @@ class _HomeScreenState extends State<HomeScreen> {
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
-                  return BadgeInfoDialog(currentUserLevel: _userLevel);
+                  return BadgeInfoDialog(
+                    currentDayCount: _consecutiveDaysCompleted,
+                    currentUserLevel: _userLevel, // এখানে 'userLevel' এর পরিবর্তে 'currentUserLevel' ব্যবহার করুন
+                  );
                 },
               );
             },
@@ -511,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "হাদিস রেফারেন্স: $hadithRef",
+            "রেফারেন্স: $hadithRef",
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14, color: AppColors.primaryGreen),
           ),

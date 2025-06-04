@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../const/constants.dart'; // আপনার AppColors এর জন্য
+import '../const/constants.dart';
 
 class IFatwaListScreen extends StatefulWidget {
   final List<dynamic> fatwaData;
-  final String? filterTag; // নতুন প্যারামিটার: ঐচ্ছিক ফিল্টার ট্যাগ
+  final String? filterTag;
 
   const IFatwaListScreen({
     Key? key,
     required this.fatwaData,
-    this.filterTag, // constructor এ যোগ করুন
+    this.filterTag,
   }) : super(key: key);
 
   @override
@@ -17,40 +17,36 @@ class IFatwaListScreen extends StatefulWidget {
 }
 
 class _IFatwaListScreenState extends State<IFatwaListScreen> {
-  List<dynamic> _allFatwas = []; // সমস্ত ফতোয়া ডেটা সংরক্ষণ করবে
-  List<dynamic> _displayedFatwas = []; // বর্তমানে প্রদর্শিত ফতোয়া
+  List<dynamic> _allFatwas = [];
+  List<dynamic> _displayedFatwas = [];
   TextEditingController _searchController = TextEditingController();
 
-  // ট্যাগের জন্য একটি সেট যাতে ডুপ্লিকেট ট্যাগ না থাকে
   Set<String> _uniqueTags = {};
-  String? _selectedTag; // বর্তমানে নির্বাচিত ট্যাগ
+  String? _selectedTag;
 
   @override
   void initState() {
     super.initState();
-    _allFatwas = List.from(widget.fatwaData); // সব ফতোয়া সংরক্ষণ করুন
+    _allFatwas = List.from(widget.fatwaData);
 
-    // ফতোয়া থেকে সব অনন্য ট্যাগ সংগ্রহ করুন
     for (var fatwa in _allFatwas) {
       if (fatwa['tag'] != null) {
         _uniqueTags.add(fatwa['tag']);
       }
     }
 
-    // যদি filterTag পাঠানো হয়, তাহলে সেটি প্রাথমিক নির্বাচিত ট্যাগ হবে
     if (widget.filterTag != null && _uniqueTags.contains(widget.filterTag)) {
       _selectedTag = widget.filterTag;
     }
 
-    _applyFilters(); // প্রাথমিক ফিল্টারিং প্রয়োগ করুন
+    _applyFilters();
     _searchController.addListener(_onSearchChanged);
   }
 
-  // ডেটা ফিল্টার এবং সার্চ করার জন্য একটি নতুন ফাংশন
   void _applyFilters() {
     List<dynamic> filteredByTag = [];
 
-    if (_selectedTag == null || _selectedTag == 'All') { // 'All' ট্যাগ সব দেখাবে
+    if (_selectedTag == null || _selectedTag == 'All') {
       filteredByTag = List.from(_allFatwas);
     } else {
       filteredByTag = _allFatwas.where((fatwa) {
@@ -58,17 +54,27 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
       }).toList();
     }
 
-    final query = _searchController.text.toLowerCase().trim(); // অতিরিক্ত স্পেস সরান
-    // যদি সার্চ কোয়েরি খালি থাকে, তাহলে শুধু ট্যাগ ফিল্টার করা ডেটা দেখান
+    final query = _searchController.text.toLowerCase().trim();
+
     if (query.isEmpty) {
       setState(() {
         _displayedFatwas = filteredByTag;
+        _displayedFatwas.sort((a, b) {
+          final timestampA = a['timestamp'];
+          final timestampB = b['timestamp'];
+
+          if (timestampA == null && timestampB == null) return 0;
+          if (timestampA == null) return 1;
+          if (timestampB == null) return -1;
+
+          // অ্যাসেন্ডিং অর্ডারের জন্য (পুরোনোতম প্রথমে)
+          return (timestampA as Comparable).compareTo(timestampB as Comparable);
+        });
       });
       return;
     }
 
-    // একাধিক শব্দ দিয়ে সার্চ করার জন্য লজিক
-    final searchTerms = query.split(' ').where((s) => s.isNotEmpty).toList(); // স্পেস দিয়ে ভাগ করুন
+    final searchTerms = query.split(' ').where((s) => s.isNotEmpty).toList();
 
     setState(() {
       _displayedFatwas = filteredByTag.where((fatwa) {
@@ -76,17 +82,28 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
         final details = fatwa['question_details']?.toLowerCase() ?? '';
         final answer = fatwa['answer']?.toLowerCase() ?? '';
 
-        // প্রতিটি সার্চ টার্ম দিয়ে চেক করুন যদি কোনো ফিল্ডে ম্যাচ করে
         return searchTerms.any((term) =>
         title.contains(term) ||
             details.contains(term) ||
             answer.contains(term));
       }).toList();
+
+      _displayedFatwas.sort((a, b) {
+        final timestampA = a['timestamp'];
+        final timestampB = b['timestamp'];
+
+        if (timestampA == null && timestampB == null) return 0;
+        if (timestampA == null) return 1;
+        if (timestampB == null) return -1;
+
+        // অ্যাসেন্ডিং অর্ডারের জন্য (পুরোনোতম প্রথমে)
+        return (timestampA as Comparable).compareTo(timestampB as Comparable);
+      });
     });
   }
 
   void _onSearchChanged() {
-    _applyFilters(); // সার্চ টেক্সট পরিবর্তন হলে ফিল্টার আবার প্রয়োগ করুন
+    _applyFilters();
   }
 
   @override
@@ -116,26 +133,20 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: Container( // Material এর বদলে Container ব্যবহার করুন Elevation বাদ দেওয়ার জন্য
+            child: Container(
               decoration: BoxDecoration(
-                color: AppColors.lightGreen, // ফিল্ডের ব্যাকগ্রাউন্ড কালার
-                borderRadius: BorderRadius.circular(12), // গোলাকার কোণা
-                // ইনার শ্যাডো ইফেক্টের জন্য
+                color: AppColors.lightGreen,
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
-                  // উপরের ও বামের হালকা শ্যাডো (আলোর উৎস থেকে)
                   BoxShadow(
-                    color: AppColors.white.withOpacity(0.7), // হালকা সাদা শ্যাডো
-                    offset: Offset(-2, -2), // বাম ও উপরের দিকে শ্যাডো
+                    color: AppColors.white.withOpacity(0.7),
+                    offset: Offset(-2, -2),
                     blurRadius: 4,
                     spreadRadius: 1,
-                    // ইনসেট শ্যাডোর মতো প্রভাবের জন্য এটি গুরুত্বপূর্ণ।
-                    // যদিও এটি প্রকৃত ইনসেট শ্যাডো নয়, এটি সেই অনুভূতি দেয়।
                   ),
-                  // নিচের ও ডানের গাঢ় শ্যাডো (অন্ধকার অংশ)
                   BoxShadow(
-                    color: AppColors.innerShadowColor.withOpacity(0.1), // হালকা কালো শ্যাডো
-                    offset: Offset(2, 2), // ডান ও নিচের দিকে শ্যাডো
-
+                    color: AppColors.innerShadowColor.withOpacity(0.1),
+                    offset: Offset(2, 2),
                     blurRadius: 4,
                     spreadRadius: 1,
                   ),
@@ -152,56 +163,47 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
                     icon: Icon(Icons.clear, color: Colors.grey[600]),
                     onPressed: () {
                       _searchController.clear();
-                      // আপনার ফিল্টার লজিক এখানে কল করুন
-                      // যেমন: _applyFilters();
                       if (mounted) {
-                        setState(() {
-                          // এটি নিশ্চিত করবে যে ক্লিয়ার আইকনটি সঠিকভাবে লুকাবে
-                        });
+                        setState(() {});
                       }
                     },
                   )
                       : null,
-                  border: InputBorder.none, // কোনো বর্ডার নেই
-                  focusedBorder: OutlineInputBorder( // ফোকাস করলে বর্ডার
+                  border: InputBorder.none,
+                  focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.primaryGreen, width: 2.0), // সবুজ বর্ডার
+                    borderSide: BorderSide(color: AppColors.primaryGreen, width: 2.0),
                   ),
-                  enabledBorder: InputBorder.none, // এনেবল থাকাকালে কোনো বর্ডার নেই
+                  enabledBorder: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 ),
                 cursorColor: AppColors.primaryGreen,
                 style: TextStyle(color: Colors.black87, fontSize: 16),
                 onChanged: (query) {
                   if (mounted) {
-                    setState(() {}); // ক্লিয়ার আইকন আপডেটের জন্য
+                    setState(() {});
                   }
-                  // _applyFilters(); // যদি প্রতিটি ক্যারেক্টার টাইপ করার সময় ফিল্টার করতে চান
                 },
                 textInputAction: TextInputAction.search,
-                onSubmitted: (query) {
-                  // যখন ইউজার কিবোর্ডের সার্চ বাটন ক্লিক করবে
-                  // _applyFilters();
-                },
+                onSubmitted: (query) {},
               ),
             ),
           ),
-          // ট্যাগ ফিল্টার ড্রপডাউন
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0), // Padding ঠিক করা হয়েছে
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
             child: Row(
               children: [
                 const Text(
                   'ট্যাগ:',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
                 ),
-                const SizedBox(width: 10), // ট্যাগের টেক্সট ও ড্রপডাউন এর মাঝে স্পেস
+                const SizedBox(width: 10),
                 Expanded(
                   child: DropdownButton<String>(
                     value: _selectedTag,
                     hint: const Text('সব'),
                     isExpanded: true,
-                    underline: Container(), // ড্রপডাউন এর নিচের লাইন সরিয়ে দেয়া হয়েছে
+                    underline: Container(),
                     items: ['All', ..._uniqueTags].map((String tag) {
                       return DropdownMenuItem<String>(
                         value: tag,
@@ -211,27 +213,25 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
                     onChanged: (String? newValue) {
                       setState(() {
                         _selectedTag = newValue;
-                        _applyFilters(); // ট্যাগ পরিবর্তন হলে ফিল্টার প্রয়োগ করুন
+                        _applyFilters();
                       });
                     },
                   ),
                 ),
                 SizedBox(
-                  width: 10, // ড্রপডাউন ও আইকন বাটনের মাঝে স্পেস
+                  width: 10,
                 ),
-                // Icon button for get questiio
                 IconButton(
                   icon:Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.question_answer, color: AppColors.primaryGreen),
-                      const SizedBox(width: 4), // আইকন ও টেক্সট এর মাঝে স্পেস
+                      const SizedBox(width: 4),
                       const Text('প্রশ্ন করুন', style: TextStyle(color: AppColors.primaryGreen)),
                     ],
                   ),
                   onPressed: () {
-                    // Open external link or perform action
-                    const url = 'https://ifatwa.info/rules'; // আপনার প্রশ্ন করার লিঙ্ক এখানে দিন
+                    const url = 'https://ifatwa.info/rules';
                     launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((error) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('লিঙ্ক খুলতে ব্যর্থ হয়েছে।')),
@@ -294,7 +294,7 @@ class FatwaCardWidget extends StatelessWidget {
                 fontSize: 15,
                 color: Colors.black87,
               ),
-              maxLines: 3, // প্রথম কয়েক লাইন দেখানোর জন্য
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 10),
