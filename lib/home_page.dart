@@ -60,25 +60,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _initializeDailyTasks() async {
     final prefs = await SharedPreferences.getInstance();
+
     _lastResetDate = DateTime.tryParse(prefs.getString('lastResetDate') ?? '');
     _allTasksCompleted = prefs.getBool('allTasksCompleted') ?? false;
 
-    // Load user level and consecutive days
     _userLevel = prefs.getInt('userLevel') ?? 1;
     _consecutiveDaysCompleted = prefs.getInt('consecutiveDaysCompleted') ?? 0;
 
-    // Check if we need to reset (new day after 1AM)
-    await _checkAndResetDailyTasks(); // Await this to ensure state is updated before build
+    await _checkAndResetDailyTasks();
 
-    // Set up timer to check every hour
+    // ✅ Ensure user level is up-to-date even after app restart
+    if (_allTasksCompleted) {
+      await _updateUserLevel();
+    }
+
     _dailyResetTimer = Timer.periodic(const Duration(hours: 1), (timer) {
       _checkAndResetDailyTasks();
     });
 
-    setState(() {
-      // Update state after loading everything
-    });
+    setState(() {});
   }
+
 
   Future<void> _checkAndResetDailyTasks() async {
     final prefs = await SharedPreferences.getInstance();
@@ -114,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Helper function to update user level based on consecutive task completions
   Future<void> _updateUserLevel() async {
     final prefs = await SharedPreferences.getInstance();
     int newLevel = 1;
@@ -125,18 +126,19 @@ class _HomeScreenState extends State<HomeScreen> {
       newLevel = 4;
     } else if (_consecutiveDaysCompleted >= 5) {
       newLevel = 3;
-    } else if (_consecutiveDaysCompleted >= 1) { // Assuming 1 day completed moves to level 2
+    } else if (_consecutiveDaysCompleted >= 1) {
       newLevel = 2;
-    } else {
-      newLevel = 1;
     }
 
-    if (newLevel > _userLevel) {
+    // Save and update even if level did not change (ensures consistency)
+    if (newLevel != _userLevel) {
       setState(() {
         _userLevel = newLevel;
       });
-      await prefs.setInt('userLevel', _userLevel); // Save the new level
-      if(mounted) {
+      await prefs.setInt('userLevel', _userLevel);
+
+      // Only show level-up message if new level is higher
+      if (newLevel > _userLevel && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text("আপনি নতুন লেভেলে পৌঁছেছেন: লেভেল $_userLevel!"),
@@ -144,8 +146,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }
+    } else {
+      await prefs.setInt('userLevel', newLevel); // Save even if unchanged
     }
   }
+
 
   Future<void> loadDataFromDevice() async {
     final prefs = await SharedPreferences.getInstance();
