@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:iomdailyazkar/home_page.dart'; // Make sure this path is correct
-import 'package:iomdailyazkar/theme/app_text_styles.dart'; // Make sure this path is correct
-import 'package:iomdailyazkar/services/notification_service.dart'; // Ensure this path is correct
-import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // Added for NotificationResponse
+import 'package:flutter/material.dart';// Ensure this path is correct
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+import 'core/services/notification_service.dart';
+import 'core/theme/app_text_styles.dart';
+import 'features/home/presentation/screens/home_page.dart'; // Added for NotificationResponse
 
 // This needs to be a top-level function or a static method of a top-level class
 // to be accessible by the plugin when the app is in the background/terminated.
