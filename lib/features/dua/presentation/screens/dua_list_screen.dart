@@ -16,8 +16,8 @@ class DuaListScreen extends StatefulWidget {
 class _DuaListScreenState extends State<DuaListScreen> {
   List<dynamic> _filteredDuas = [];
   List<dynamic> _displayedDuas = [];
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
-  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -28,7 +28,7 @@ class _DuaListScreenState extends State<DuaListScreen> {
 
   void _filterDuas() {
     _filteredDuas = widget.duaData.where((dua) {
-      return dua['category_tag'] == widget.tag;
+      return dua['category']?.toString().trim() == widget.tag.trim();
     }).toList();
 
     _displayedDuas = List.from(_filteredDuas);
@@ -38,15 +38,14 @@ class _DuaListScreenState extends State<DuaListScreen> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
+    final query = _searchController.text.toLowerCase().trim();
     setState(() {
       _displayedDuas = _filteredDuas.where((dua) {
-        final title = dua['title']?.toLowerCase() ?? '';
+        final title = dua['title']?.toString().toLowerCase().trim() ?? '';
         return title.contains(query);
       }).toList();
     });
   }
-
 
   @override
   void dispose() {
@@ -74,16 +73,24 @@ class _DuaListScreenState extends State<DuaListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
         children: [
-          DuaSearchWidget(searchController: _searchController),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+            child: DuaSearchWidget(searchController: _searchController),
+          ),
           Expanded(
             child: _displayedDuas.isEmpty
                 ? const Center(child: Text('কোনো দোয়া খুঁজে পাওয়া যায়নি।'))
                 : ListView.builder(
+              physics: const BouncingScrollPhysics(),
               itemCount: _displayedDuas.length,
               padding: const EdgeInsets.symmetric(horizontal: 12),
               itemBuilder: (context, index) {
                 final dua = _displayedDuas[index];
-                return DuaListCardWidget(dua: dua, index: index, duaList: _displayedDuas);
+                return DuaListCardWidget(
+                  dua: dua,
+                  index: index,
+                  duaList: _displayedDuas,
+                );
               },
             ),
           ),

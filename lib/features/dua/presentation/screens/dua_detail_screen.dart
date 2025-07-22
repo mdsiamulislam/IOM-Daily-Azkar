@@ -171,15 +171,16 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
     }
   }
 
+  // Section title builder
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 18,
+          fontSize: 17,
           fontWeight: FontWeight.bold,
-          color: Colors.green,
+          color: Colors.black87,
         ),
       ),
     );
@@ -397,13 +398,29 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                       // Bangla Pronunciation
                       if (duaBangla.isNotEmpty) ...[
                         _buildSectionTitle('বাংলা উচ্চারণ'),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.yellow[50],
+                            border: Border.all(color: Colors.yellow[300]!),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'দ্রষ্টব্য: আরবি দু’আ ও পাঠসমূহ বাংলা হরফে লেখা হয়েছে সহায়তার জন্য। তবে সব আরবি শব্দের সঠিক উচ্চারণ বাংলা ভাষায় প্রকাশ করা সম্ভব নয়। তাই সুযোগ হলে আরবি মূল লেখা দেখে শিখুন, ইনশাআল্লাহ।',
+                            style: TextStyle(
+                              fontSize: banglaFontSize - 4,
+                              color: Colors.orange[800],
+                            ),
+                          ),
+                        ),
                         Text(
                           duaBangla,
                           style: TextStyle(
                             fontSize: banglaFontSize,
                             height: 1.5,
                           ),
-                          textAlign: TextAlign.center,
+                          textAlign: TextAlign.left,
                         ),
                         const SizedBox(height: 16),
                       ],
@@ -425,30 +442,6 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                       // Bangla Translation with Warning
                       if (banglaTranslation.isNotEmpty) ...[
                         _buildSectionTitle('বাংলা অনুবাদ'),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.yellow[50],
-                            border: Border.all(color: Colors.yellow[300]!),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.info_outline, color: Colors.orange[700], size: 16),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'দ্রষ্টব্য: কখনো কখনো অনুবাদে ভুল থাকতে পারে',
-                                  style: TextStyle(
-                                    fontSize: banglaFontSize - 4,
-                                    color: Colors.orange[800],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                         Text(
                           banglaTranslation,
                           style: TextStyle(
@@ -601,3 +594,4 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
     );
   }
 }
+
