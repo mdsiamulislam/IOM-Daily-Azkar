@@ -24,7 +24,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
@@ -33,16 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   int randomIndex = 0;
 
+  // Add ScrollController for better control
+  ScrollController? _scrollController;
+
+  // Keep alive to prevent rebuilding
+  @override
+  bool get wantKeepAlive => true;
+
   int generateRandomIndex(int max) => (DateTime.now().millisecondsSinceEpoch % max).toInt();
 
   @override
   void initState() {
     super.initState();
+    _scrollController = ScrollController();
     loadDataFromDevice();
   }
 
   @override
   void dispose() {
+    _scrollController?.dispose();
     super.dispose();
   }
 
@@ -71,7 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
         }
-        setState(() => isLoading = false);
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
       } else {
         await fetchAndStoreData();
       }
@@ -82,7 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchAndStoreData() async {
-    setState(() => isLoading = true);
+    if (mounted) {
+      setState(() => isLoading = true);
+    }
     const url = 'https://script.google.com/macros/s/AKfycbz6gZBH5qs6YlZZK6I7uMrkUITUPaVPxisCcFGHhe1QavpPQQ3SvRv4-Fp06baSgq10/exec';
 
     try {
@@ -108,7 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
           randomIndex = generateRandomIndex(hadithList.length);
         }
 
-        setState(() => isLoading = false);
+        if (mounted) {
+          setState(() => isLoading = false);
+        }
       } else {
         throw Exception("Server returned error");
       }
@@ -120,8 +135,8 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text("ডেটা লোড করতে ব্যর্থ হয়েছে। ইন্টারনেট চেক করুন।"),
           ),
         );
+        setState(() => isLoading = false);
       }
-      setState(() => isLoading = false);
     }
   }
 
@@ -166,8 +181,32 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Helper method to get responsive cross axis count
+  int _getCrossAxisCount(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth > 600) {
+      return 3; // Tablets
+    } else if (screenWidth > 400) {
+      return 2; // Large phones
+    } else {
+      return 2; // Small phones
+    }
+  }
+
+  // Helper method to get responsive aspect ratio
+  double _getChildAspectRatio(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth > 600) {
+      return 1.1; // Tablets
+    } else {
+      return 1.0; // Phones
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     final String hadithText = hadithList.isNotEmpty && (hadithList[randomIndex]['hadis']?.trim().isNotEmpty ?? false)
         ? hadithList[randomIndex]['hadis']
         : 'আজকের হাদিস পাওয়া যায়নি।';
@@ -199,17 +238,46 @@ class _HomeScreenState extends State<HomeScreen> {
         child: RefreshIndicator(
           onRefresh: fetchAndStoreData,
           color: AppColors.primaryGreen,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const SizedBox(height: 10),
-              const CombinedPrayerTimesWidget(),
-              const SizedBox(height: 16),
-              isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
-              const SizedBox(height: 24),
-              isLoading ? _buildShimmerGrid() : _buildCategoryGrid(),
-              const SizedBox(height: 24),
-              isLoading ? _buildShimmerCard() : _buildFatwaSection(),
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(), // Better scroll physics
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 10),
+                    // Prayer Times Widget
+                    const CombinedPrayerTimesWidget(),
+                    const SizedBox(height: 16),
+                    // Hadith Card
+                    isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
+                    const SizedBox(height: 24),
+                  ]),
+                ),
+              ),
+              // Category Grid
+              if (isLoading)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: _buildShimmerGridSliver(),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: _buildCategoryGridSliver(),
+                ),
+              // Fatwa Section
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 8),
+                    isLoading ? _buildShimmerCard() : _buildFatwaSection(),
+                    const SizedBox(height: 24), // Bottom padding
+                  ]),
+                ),
+              ),
             ],
           ),
         ),
@@ -233,10 +301,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bold.copyWith(color: Colors.white, fontSize: 16),
+                Flexible(
+                  child: Text(
+                    'স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bold.copyWith(color: Colors.white, fontSize: 14),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -315,18 +387,37 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
       ),
       child: Column(
         children: [
-          Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16, color: AppColors.primaryGreen, fontStyle: FontStyle.italic)),
-          const SizedBox(height: 8),
-          Text("রেফারেন্স: $ref", textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppColors.primaryGreen)),
+          Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.primaryGreen,
+                fontStyle: FontStyle.italic,
+                height: 1.5,
+              )
+          ),
+          if (ref.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+                "রেফারেন্স: $ref",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.primaryGreen,
+                  fontWeight: FontWeight.w500,
+                )
+            ),
+          ],
           Align(
             alignment: Alignment.centerRight,
             child: IconButton(
               icon: const Icon(Icons.share, color: AppColors.primaryGreen),
-              onPressed: () => Share.share("$text\n\nহাদিস: $ref"),
+              onPressed: () => Share.share("$text${ref.isNotEmpty ? '\n\nহাদিস: $ref' : ''}"),
             ),
           ),
         ],
@@ -334,58 +425,78 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryGrid() {
+  Widget _buildCategoryGridSliver() {
     final validCategories = categories.where((category) {
       final title = category["title"]?.toString().trim() ?? "";
       final tag = category["tag"]?.toString().trim() ?? "";
       return title.isNotEmpty && tag.isNotEmpty;
     }).toList();
 
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: validCategories.map((category) {
-        final String title = category["title"];
-        final String tag = category["tag"].toString().trim();
-        final String iconName = category["icon_name"] ?? "help";
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _getCrossAxisCount(context),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: _getChildAspectRatio(context),
+      ),
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          final category = validCategories[index];
+          final String title = category["title"];
+          final String tag = category["tag"].toString().trim();
+          final String iconName = category["icon_name"] ?? "help";
 
-        return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DuaListScreen(tag: tag, duaData: duaData),
-              ),
-            );
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen,
+          return Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DuaListScreen(tag: tag, duaData: duaData),
+                  ),
+                );
+              },
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6)],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    getIconFromName(iconName),
+                    const SizedBox(height: 10),
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                getIconFromName(iconName),
-                const SizedBox(height: 10),
-                Text(title, style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.w500, fontSize: 15), textAlign: TextAlign.center),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+          );
+        },
+        childCount: validCategories.length,
+      ),
     );
   }
 
   Widget _buildFatwaSection() {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 6,
       shadowColor: Colors.green.withOpacity(0.3),
@@ -400,7 +511,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.primaryGreen.withOpacity(0.1), shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withOpacity(0.1),
+                    shape: BoxShape.circle
+                ),
                 child: const Icon(Icons.book_outlined, color: AppColors.primaryGreen, size: 28),
               ),
               const SizedBox(width: 16),
@@ -408,9 +522,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("ফতোয়া বিভাগ", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                    const Text(
+                        "ফতোয়া বিভাগ",
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryGreen
+                        )
+                    ),
                     const SizedBox(height: 4),
-                    Text("ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।", style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                    Text(
+                      "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।",
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700]
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -426,24 +555,39 @@ class _HomeScreenState extends State<HomeScreen> {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
-      child: Container(height: 120, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20))),
+      child: Container(
+          height: 120,
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20)
+          )
+      ),
     );
   }
 
-  Widget _buildShimmerGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: List.generate(4, (index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(height: 100, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
-        );
-      }),
+  Widget _buildShimmerGridSliver() {
+    return SliverGrid(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _getCrossAxisCount(context),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: _getChildAspectRatio(context),
+      ),
+      delegate: SliverChildBuilderDelegate(
+            (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16)
+              ),
+            ),
+          );
+        },
+        childCount: 4,
+      ),
     );
   }
 }

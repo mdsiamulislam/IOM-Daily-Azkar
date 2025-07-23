@@ -23,7 +23,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
   Coordinates? selectedCoordinates;
   String selectedCity = 'Dhaka'; // Default city
 
-  // Save selected city  locally
+  // Save selected city locally
   Future<void> _saveSelectedCity(String city) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('selectedCity', city);
@@ -91,6 +91,15 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     return '$hoursStr$minutesStr$secondsStr'.trim();
   }
 
+  // --- Screen Size Helper ---
+  bool _isSmallScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width < 360;
+  }
+
+  bool _isMediumScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width >= 360 && MediaQuery.of(context).size.width < 600;
+  }
+
   // --- Lifecycle Methods ---
   @override
   void initState() {
@@ -122,8 +131,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
       calculatePrayerTimes();
     });
   }
-
-
 
   // --- Calculate Prayer Times ---
   void calculatePrayerTimes() {
@@ -207,6 +214,18 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = _isSmallScreen(context);
+    final isMediumScreen = _isMediumScreen(context);
+
+    // Responsive sizing
+    final double containerPadding = isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
+    final double iconSize = isSmallScreen ? 14.0 : 16.0;
+    final double headerFontSize = isSmallScreen ? 11.0 : isMediumScreen ? 13.0 : 14.0;
+    final double timerFontSize = isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
+    final double prayerNameFontSize = isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
+    final double prayerTimeFontSize = isSmallScreen ? 10.0 : isMediumScreen ? 13.0 : 14.0;
+
     if (prayerTimes == null) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
@@ -224,7 +243,13 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     ];
 
     return Container(
-      padding: const EdgeInsets.all(10), // Reduced overall padding slightly
+      width: double.infinity,
+      constraints: BoxConstraints(
+        maxWidth: screenWidth * 0.95, // Ensure it doesn't exceed 95% of screen width
+        minWidth: 300, // Minimum width for very small screens
+      ),
+      margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.0 : 8.0),
+      padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
         color: const Color(0xFF2e7d32), // Dark green background
         borderRadius: BorderRadius.circular(16),
@@ -238,27 +263,31 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center, // Center the entire column content
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // City Selector (less highlighted, centered)
+          // City Selector (responsive)
           Row(
             children: [
-              const Icon(Icons.location_on, color: Colors.white70, size: 16),
-              const SizedBox(width: 10),
-              Flexible( // Use Flexible to ensure the dropdown doesn't overflow
+              Icon(Icons.location_on, color: Colors.white70, size: iconSize),
+              SizedBox(width: isSmallScreen ? 6 : 10),
+              Expanded( // Changed from Flexible to Expanded for better space utilization
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: selectedCity,
                     dropdownColor: const Color(0xFF1b5e20),
-                    style: AppTextStyles.regular.copyWith(color: Colors.white),
-                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                    style: AppTextStyles.regular.copyWith(
+                      color: Colors.white,
+                      fontSize: headerFontSize,
+                    ),
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.white70, size: iconSize + 2),
+                    isExpanded: true, // Make dropdown take full available width
                     onChanged: (String? newValue) {
                       if (newValue != null) {
                         setState(() {
                           selectedCity = newValue;
                           selectedCoordinates = CityCoordinates.cityMap[selectedCity];
                           calculatePrayerTimes();
-                          _saveSelectedCity(newValue); // Save the new city
+                          _saveSelectedCity(newValue);
                         });
                       }
                     },
@@ -267,17 +296,25 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                         value: city,
                         child: Text(
                           city,
-                          style: AppTextStyles.regular.copyWith(color: Colors.white),
-                          overflow: TextOverflow.ellipsis, // Ensure city name doesn't overflow
+                          style: AppTextStyles.regular.copyWith(
+                            color: Colors.white,
+                            fontSize: headerFontSize,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       );
                     }).toList(),
                   ),
                 ),
               ),
-              const Spacer(), // Add spacer to push the icon button to the right
+              SizedBox(width: isSmallScreen ? 4 : 8),
               IconButton(
-                icon: const Icon(Icons.info_outline, color: Colors.white, size: 18),
+                icon: Icon(Icons.info_outline, color: Colors.white, size: iconSize + 2),
+                padding: EdgeInsets.all(isSmallScreen ? 4 : 8),
+                constraints: BoxConstraints(
+                  minWidth: isSmallScreen ? 32 : 40,
+                  minHeight: isSmallScreen ? 32 : 40,
+                ),
                 onPressed: () {
                   showDialog(
                     context: context,
@@ -290,56 +327,55 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
             ],
           ),
 
-          // Main Display for Current/Next Prayer
+          SizedBox(height: isSmallScreen ? 6 : 8),
+
+          // Main Display for Current/Next Prayer (responsive)
           Column(
             children: [
               Text(
                 (remainingTime.isNegative)
                     ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
-                    : 'পরবর্তী ওয়াক্ত : ' + nextPrayerName, // Added space for readability
-                style: AppTextStyles.regular.copyWith(fontSize: 13, color: Colors.white70),
+                    : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
+                style: AppTextStyles.regular.copyWith(
+                  fontSize: headerFontSize,
+                  color: Colors.white70,
+                ),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: isSmallScreen ? 4 : 8),
               Text(
                 formatBanglaDuration(remainingTime),
-                style: AppTextStyles.bold.copyWith(fontSize: 16, color: Colors.white), // Slightly larger font
+                style: AppTextStyles.bold.copyWith(
+                  fontSize: timerFontSize,
+                  color: Colors.white,
+                ),
                 textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
-          const Divider(color: Colors.white54, height: 10),
-          const SizedBox(
-            height: 10, // Some space below the divider
+
+          Divider(
+            color: Colors.white54,
+            height: isSmallScreen ? 16 : 20,
+            thickness: 1,
           ),
+
+          // Flexible Grid - 2 columns minimum, height adjusts to content
           LayoutBuilder(
             builder: (context, constraints) {
-              final double crossAxisSpacing = 8;
-              final int crossAxisCount = 2;
+              const int crossAxisCount = 2;
+              double crossAxisSpacing = isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
+              double mainAxisSpacing = isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
 
-              // Calculate the available width for each grid item
-              // (Total width - total cross axis spacing) / number of items
-              final double itemWidth = (constraints.maxWidth - (crossAxisSpacing * (crossAxisCount - 1))) / crossAxisCount;
-
-              // Determine a target height for the content inside each grid item.
-              // This value is crucial for responsiveness. Adjust it based on your content.
-              // For 2 lines of text + progress bar + padding, around 85-95 should work.
-              final double targetItemHeight = 90.0; // Experiment with this value
-
-              // Calculate childAspectRatio based on the calculated itemWidth and targetItemHeight
-              final double dynamicChildAspectRatio = itemWidth / targetItemHeight;
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  childAspectRatio: dynamicChildAspectRatio, // Use the dynamically calculated aspect ratio
-                  crossAxisSpacing: crossAxisSpacing,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: prayers.length,
-                itemBuilder: (context, index) {
+              // Calculate each prayer card
+              return Wrap(
+                spacing: crossAxisSpacing,
+                runSpacing: mainAxisSpacing,
+                children: List.generate(prayers.length, (index) {
                   final prayer = prayers[index];
                   final String name = prayer['name'];
                   final DateTime start = prayer['start'];
@@ -356,57 +392,69 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                     progress = 1.0;
                   }
 
-                  // Progress bar color
-                  final Color progressBarColor = Colors.lightGreenAccent;
+                  // Calculate width for each item (2 per row)
+                  final double itemWidth = (constraints.maxWidth - crossAxisSpacing) / 2;
 
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? Colors.white.withOpacity(0.25)
-                          : Colors.white.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: isActive ? Border.all(color: Colors.white, width: 2) : null,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        // mainAxisAlignment: MainAxisAlignment.center, // Removed as it can sometimes cause issues with min height
-                        mainAxisSize: MainAxisSize.min, // Keep this to make column take minimum vertical space
-                        children: [
-                          // Use Flexible to ensure text wraps and doesn't overflow
-                          Flexible(
-                            child: Text(
-                              name,
-                              style: AppTextStyles.bold.copyWith(fontSize: 14, color: Colors.white),
-                              overflow: TextOverflow.ellipsis, // Add ellipsis for long text
-                              maxLines: 1, // Limit to one line to save space, adjust if more lines are desired
-                            ),
+                  return SizedBox(
+                    width: itemWidth,
+                    child: IntrinsicHeight( // This ensures the container takes only the height it needs
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.white.withOpacity(0.25)
+                              : Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
+                          border: isActive
+                              ? Border.all(color: Colors.white, width: isSmallScreen ? 1.5 : 2)
+                              : null,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Prayer name
+                              Text(
+                                name,
+                                style: AppTextStyles.bold.copyWith(
+                                  fontSize: prayerNameFontSize,
+                                  color: Colors.white,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+
+                              SizedBox(height: isSmallScreen ? 2 : 4),
+
+                              // Prayer times
+                              Text(
+                                '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
+                                style: AppTextStyles.regular.copyWith(
+                                  fontSize: prayerTimeFontSize,
+                                  color: Colors.white70,
+                                ),
+                                maxLines: 2, // Allow 2 lines for time if needed
+                                overflow: TextOverflow.ellipsis,
+                              ),
+
+                              SizedBox(height: isSmallScreen ? 4 : 6),
+
+                              // Progress bar
+                              LinearProgressIndicator(
+                                value: progress,
+                                backgroundColor: Colors.white.withOpacity(0.3),
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightGreenAccent),
+                                borderRadius: BorderRadius.circular(isSmallScreen ? 3 : 5),
+                                minHeight: isSmallScreen ? 3 : 4,
+                              ),
+                            ],
                           ),
-                          Flexible(
-                            child: Text(
-                              '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
-                              style: AppTextStyles.regular.copyWith(fontSize: 13, color: Colors.white70),
-                              overflow: TextOverflow.ellipsis, // Add ellipsis for long time strings
-                              maxLines: 1, // Limit to one line
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 2,
-                          ),
-                          // LinearProgressIndicator will naturally take available width
-                          LinearProgressIndicator(
-                            value: progress,
-                            backgroundColor: Colors.white.withOpacity(0.3),
-                            valueColor: AlwaysStoppedAnimation<Color>(progressBarColor),
-                            borderRadius: BorderRadius.circular(5),
-                            minHeight: 4,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   );
-                },
+                }),
               );
             },
           ),

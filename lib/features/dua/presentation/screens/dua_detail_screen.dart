@@ -339,7 +339,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
 
                 // Rules
                 if (rules.isNotEmpty) ...[
-                  _buildSectionTitle('নিয়ম'),
+                  // _buildSectionTitle('নিয়ম'),
                   Text(
                     rules,
                     style: TextStyle(
