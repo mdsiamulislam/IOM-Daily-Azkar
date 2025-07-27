@@ -46,7 +46,7 @@ class NotificationService {
       }
     }
 
-    // --- iOS/macOS Specific Setup (basic example, customize as needed) ---
+    // --- iOS/macOS Specific Setup (basic proappsbuild, customize as needed) ---
     // You might need to add more permissions here for iOS (e.g., sound, badge).
     const DarwinInitializationSettings initializationSettingsDarwin =
     DarwinInitializationSettings(

@@ -1,4 +1,4 @@
-package com.example.iomdailyazkar
+package com.proappsbuild.iomdailyazkar
 
 import io.flutter.embedding.android.FlutterActivity
 

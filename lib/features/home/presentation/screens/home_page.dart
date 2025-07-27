@@ -240,7 +240,6 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
           color: AppColors.primaryGreen,
           child: CustomScrollView(
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(), // Better scroll physics
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.all(16),
