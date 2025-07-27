@@ -94,19 +94,19 @@ class AboutAppScreen extends StatelessWidget {
               context,
               icon: Icons.telegram,
               title: 'টেলিগ্রাম গ্রুপ',
-              url: 'https://t.me/+mmZEWQmF-SEwNjdl', // আপনার টেলিগ্রাম লিঙ্ক
+              url: 'https://t.me/+DtkT6BwXw6QwZTZl', // আপনার টেলিগ্রাম লিঙ্ক
             ),
             _buildLinkTile(
               context,
               icon: Icons.web,
               title: 'ওয়েবসাইট',
-              url: 'http://iom.edu.bd/', // আপনার ওয়েবসাইট লিঙ্ক
+              url: 'https://appsalsabil.blogspot.com/', // আপনার ওয়েবসাইট লিঙ্ক
             ),
             _buildLinkTile(
               context,
               icon: Icons.privacy_tip,
               title: 'গোপনীয়তা নীতি',
-              url: 'https://example.com/privacy-policy', // আপনার গোপনীয়তা নীতির লিঙ্ক
+              url: 'https://appsalsabil.blogspot.com/p/privacy-policy-iom-daily-azkar.html', // আপনার গোপনীয়তা নীতির লিঙ্ক
             ),
             const SizedBox(height: 24),
             const Divider(color: AppColors.primaryGreen), // const যোগ করা হয়েছে

@@ -355,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             onTap: () async {
               final Uri emailLaunchUri = Uri(
                 scheme: 'mailto',
-                path: 'mdsiamulislams@gmail.com',
+                path: 'soaib.softdev@gmail.com',
                 query: Uri.encodeFull('subject=Feedback for IOM Daily Azkar App'),
               );
               if (await canLaunchUrl(emailLaunchUri)) {
