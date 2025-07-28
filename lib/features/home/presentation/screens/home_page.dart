@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/features/home/widget/horizontal_card.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -14,7 +15,6 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../about/presentation/screens/about_app_screen.dart';
 import '../../../about/presentation/screens/our_apps_screen.dart';
 import '../../../dua/presentation/screens/dua_list_screen.dart';
-import '../../../ifatwa/presentation/screens/i_fatwa_list_screen.dart';
 import '../../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -29,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
   List<dynamic> fatwaData = [];
+  List<dynamic> iomdailyazkar = [];
   List<dynamic> data = [];
   bool isLoading = true;
   int randomIndex = 0;
@@ -63,17 +64,20 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       final storedData = prefs.getString('data');
       final storedDuaData = prefs.getString('duaData');
       final storedFatwaData = prefs.getString('ifatwaData');
+      final storedIomdailyazkarData = prefs.getString('iomdailyazkar');
 
       if (storedCategories != null &&
           storedHadithList != null &&
           storedData != null &&
           storedDuaData != null &&
-          storedFatwaData != null) {
+          storedFatwaData != null &&
+          storedIomdailyazkarData != null) {
         categories = json.decode(storedCategories);
         hadithList = json.decode(storedHadithList);
         data = json.decode(storedData);
         duaData = json.decode(storedDuaData);
         fatwaData = json.decode(storedFatwaData);
+        iomdailyazkar = json.decode(storedIomdailyazkarData);
         fatwaData = fatwaData.where((e) =>
         e['question_title'] != null && e['answer'] != null).toList();
 
@@ -109,10 +113,12 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         await prefs.setString('duaData', json.encode(result['dua'] ?? []));
         await prefs.setString('data', json.encode(result['data'] ?? []));
         await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? []));
+        await prefs.setString('iomdailyazkar', json.encode(result['iomdailyazkar'] ?? []));
 
         categories = result['categories'] ?? [];
         hadithList = result['hadith'] ?? [];
         duaData = result['dua'] ?? [];
+        iomdailyazkar = result['iomdailyazkar'] ?? [];
         fatwaData = (result['ifatwa'] ?? []).where((e) =>
         e['question_title'] != null && e['answer'] != null).toList();
         data = result['data'] ?? [];
@@ -251,10 +257,25 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                     const SizedBox(height: 16),
                     // Hadith Card
                     isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
-                    const SizedBox(height: 24),
                   ]),
                 ),
               ),
+
+              // IOM Daily Azkar Section
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    isLoading ? _buildShimmerCard() : HorizontalCard(
+                      duaData: iomdailyazkar,
+                      title: "IOM নির্বাচিত দু'আ",
+                      description: "IOM-এর বিশেষ বিন্যাসে সাজানো দু'আ সমূহ",
+                      icon: Icons.checklist,
+                    ),
+                  ]),
+                ),
+              ),
+
               // Category Grid
               if (isLoading)
                 SliverPadding(
@@ -272,7 +293,12 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 8),
-                    isLoading ? _buildShimmerCard() : _buildFatwaSection(),
+                    isLoading ? _buildShimmerCard() : HorizontalCard(
+                      fatwaData: fatwaData,
+                      title: "ফতোয়া বিভাগ",
+                      description: "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।",
+                      icon: Icons.book_outlined,
+                    ),
                     const SizedBox(height: 24), // Bottom padding
                   ]),
                 ),
@@ -493,63 +519,6 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     );
   }
 
-  Widget _buildFatwaSection() {
-    return Card(
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 6,
-      shadowColor: Colors.green.withOpacity(0.3),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => IFatwaListScreen(fatwaData: fatwaData)));
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.1),
-                    shape: BoxShape.circle
-                ),
-                child: const Icon(Icons.book_outlined, color: AppColors.primaryGreen, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                        "ফতোয়া বিভাগ",
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryGreen
-                        )
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "ইসলামী আইন ও বিধান সম্পর্কিত প্রশ্নের উত্তর খুঁজুন।",
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700]
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios, color: AppColors.primaryGreen, size: 20),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildShimmerCard() {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
@@ -590,3 +559,4 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     );
   }
 }
+
