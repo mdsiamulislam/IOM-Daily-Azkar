@@ -22,8 +22,10 @@ class HorizontalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDua = duaData != null;
     return Card(
       margin: EdgeInsets.zero,
+      color: isDua ? AppColors.primaryGreen : Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 6,
       shadowColor: Colors.green.withOpacity(0.3),
@@ -62,10 +64,14 @@ class HorizontalCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryGreen.withOpacity(0.1),
+                  color: isDua ? Colors.white : AppColors.primaryGreen,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: AppColors.primaryGreen, size: 28),
+                child: Icon(
+                  icon,
+                  color: isDua ?  AppColors.primaryGreen : Colors.white,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -74,10 +80,10 @@ class HorizontalCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryGreen,
+                        color: isDua ? Colors.white : AppColors.primaryGreen,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -85,7 +91,7 @@ class HorizontalCard extends StatelessWidget {
                       description,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[700],
+                        color: isDua ? Colors.white : Colors.grey[700],
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -93,7 +99,11 @@ class HorizontalCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, color: AppColors.primaryGreen, size: 20),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: isDua ? Colors.white : AppColors.primaryGreen,
+                size: 20,
+              ),
             ],
           ),
         ),
