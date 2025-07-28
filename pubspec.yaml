@@ -2,7 +2,7 @@ name: iomdailyazkar
 description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.7.0
@@ -32,6 +32,7 @@ dependencies:
   device_info_plus: ^10.1.0
   flutter_local_notifications: ^17.1.2
   permission_handler: ^11.3.1
+  upgrader: ^11.4.0
 
 dev_dependencies:
   flutter_test:

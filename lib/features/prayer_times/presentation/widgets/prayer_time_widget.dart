@@ -326,8 +326,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               ),
             ],
           ),
-
-
           // Main Display for Current/Next Prayer (responsive)
           Column(
             children: [

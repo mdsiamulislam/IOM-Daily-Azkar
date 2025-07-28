@@ -1,103 +1,71 @@
 # IOM Daily Azkar - আপনার দৈনন্দিন আজকার ও দোয়ার সঙ্গী
 
-![App Logo](assets/logo.png)
+![Cover](httpse://github.com/IOM-Daily-Azkar/blob/main/assets/cover.jpeg)
 
-IOM Daily Azkar অ্যাপটি মুসলিমদের দৈনন্দিন জীবনে আজকার (জিকির) এবং দোয়া পাঠের সুবিধার্থে তৈরি করা হয়েছে। এটি ব্যবহারকারীদের জন্য একটি সহজ এবং কার্যকরী প্ল্যাটফর্ম, যা তাদের আধ্যাত্মিক যাত্রায় সহায়তা করবে।
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart">
+  <img src="https://img.shields.io/github/license/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="License">
+  <img src="https://img.shields.io/github/stars/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="Stars">
+  <img src="https://img.shields.io/github/forks/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="Forks">
+</p>
 
-## ✨ বৈশিষ্ট্যসমূহ
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.proappsbuild.iomdailyazkar">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" height="80">
+  </a>
+</p>
 
-*   **দৈনিক আজকার ট্র্যাকিং:** সকাল, বিকাল এবং নামাজের আজকার সম্পন্ন করার ট্র্যাকিং সুবিধা।
-*   **দোয়ার তালিকা:** বিভিন্ন গুরুত্বপূর্ণ দোয়ার একটি বিস্তারিত সংগ্রহ।
-*   **ফতোয়া বিভাগ:** ইসলামিক ফতোয়া সম্পর্কে জানতে এবং প্রশ্ন করার সুযোগ।
-*   **নামাজের নিষিদ্ধ সময়:** নামাজের নিষিদ্ধ সময় সম্পর্কে বিস্তারিত তথ্য।
-*   **ব্যাজ সিস্টেম:** ধারাবাহিক আজকার সম্পন্ন করার মাধ্যমে ব্যাজ অর্জন এবং অনুপ্রেরণা।
-*   **ফন্ট সাইজ কাস্টমাইজেশন:** ব্যবহারকারীর সুবিধা অনুযায়ী আরবি ও বাংলা ফন্টের আকার পরিবর্তন করার সুবিধা।
-*   **ডার্ক থিম (পরিকল্পিত):** চোখের আরামের জন্য ডার্ক থিম ব্যবহারের সুবিধা (ভবিষ্যৎ আপডেটে আসবে)।
-*   **অন্যান্য অ্যাপস:** আমাদের অন্যান্য ইসলামিক অ্যাপস সম্পর্কে তথ্য।
+## 📖 About The App
 
-## 🛠️ ব্যবহৃত প্রযুক্তি
+**IOM Daily Azkar** is a comprehensive mobile application designed to help Muslims seamlessly integrate essential Azkar (remembrance of Allah) and Duas (supplications) into their daily lives. Our app provides a user-friendly and feature-rich platform to enhance your spiritual journey.
 
-*   **Flutter:** ক্রস-প্ল্যাটফর্ম মোবাইল অ্যাপ্লিকেশন ডেভেলপমেন্টের জন্য।
-*   **Dart:** Flutter অ্যাপ্লিকেশনের জন্য ব্যবহৃত প্রোগ্রামিং ভাষা।
-*   **Shared Preferences:** স্থানীয়ভাবে ব্যবহারকারীর সেটিংস এবং আজকারের অবস্থা সংরক্ষণের জন্য।
-*   **URL Launcher:** অ্যাপ থেকে বাহ্যিক লিঙ্ক খোলার জন্য।
-*   **Package Info Plus:** অ্যাপ্লিকেশনের প্যাকেজ তথ্য পাওয়ার জন্য।
-*   **Share Plus:** অ্যাপ থেকে টেক্সট শেয়ার করার জন্য।
-*   **Adhan:** নামাজের সময় গণনার জন্য।
-*   **Timezone:** সময় অঞ্চল ব্যবস্থাপনার জন্য।
-*   **Intl:** আন্তর্জাতিকীকরণ এবং স্থানীয়করণের জন্য।
-*   **Shimmer:** লোডিং ইফেক্ট প্রদর্শনের জন্য।
-*   **Flutter Local Notifications:** স্থানীয় নোটিফিকেশন প্রদর্শনের জন্য।
-*   **Permission Handler:** ডিভাইসের পারমিশন ব্যবস্থাপনার জন্য।
+**IOM Daily Azkar** অ্যাপটি মুসলিমদের দৈনন্দিন জীবনে আজকার (জিকির) এবং দোয়া পাঠের সুবিধার্থে তৈরি করা হয়েছে। এটি ব্যবহারকারীদের জন্য একটি সহজ এবং কার্যকরী প্ল্যাটফর্ম, যা তাদের আধ্যাত্মিক যাত্রায় সহায়তা করবে।
 
-## 🚀 সেটআপ এবং রান করুন
+## ✨ Key Features
 
-এই প্রজেক্টটি আপনার স্থানীয় সিস্টেমে সেটআপ এবং রান করার জন্য নিচের ধাপগুলো অনুসরণ করুন।
+*   **☀️ Daily Azkar Tracking:** Keep track of your morning, evening, and post-prayer Azkar.
+*   **🤲 Dua Collection:** A vast collection of important Duas for various occasions.
+*   **📜 Fatwa Section:** Access and inquire about Islamic rulings (Fatwas).
+*   **🚫 Forbidden Prayer Times:** Detailed information about the times when prayer is forbidden.
+*   **🏅 Badge System:** Earn badges and stay motivated by consistently completing your Azkar.
+*   **✒️ Customizable Fonts:** Adjust Arabic and Bengali font sizes for a comfortable reading experience.
+*   **🌙 Dark Theme (Coming Soon):** An eye-soothing dark theme for better nighttime usability.
+*   **📱 Other Apps:** Discover other Islamic apps from our development team.
 
-### পূর্বশর্ত
+## 🛠️ Built With
 
-আপনার সিস্টেমে নিম্নলিখিত সফটওয়্যারগুলো ইনস্টল করা থাকতে হবে:
+*   **[Flutter](https://flutter.dev/)** - Cross-platform UI toolkit.
+*   **[Dart](https://dart.dev/)** - Programming language for Flutter.
+*   **[Shared Preferences](https://pub.dev/packages/shared_preferences)** - For local data storage.
+*   **[URL Launcher](https://pub.dev/packages/url_launcher)** - To launch external links.
+*   **[Package Info Plus](https://pub.dev/packages/package_info_plus)** - To retrieve app package information.
+*   **[Share Plus](https://pub.dev/packages/share_plus)** - For sharing content from the app.
+*   **[Adhan](https://pub.dev/packages/adhan)** - For prayer time calculations.
+*   **[Timezone](https://pub.dev/packages/timezone)** - For timezone management.
+*   **[Intl](https://pub.dev/packages/intl)** - For internationalization and localization.
+*   **[Shimmer](https://pub.dev/packages/shimmer)** - To display loading effects.
+*   **[Flutter Local Notifications](https://pub.dev/packages/flutter_local_notifications)** - For local notifications.
+*   **[Permission Handler](https.com/packages/permission_handler)** - For handling device permissions.
 
-*   [Flutter SDK](https://flutter.dev/docs/get-started/install)
-*   [Android Studio](https://developer.android.com/studio) (Android ডেভেলপমেন্টের জন্য) অথবা [Xcode](https://developer.apple.com/xcode/) (iOS ডেভেলপমেন্টের জন্য)
-*   একটি কোড এডিটর, যেমন [VS Code](https://code.visualstudio.com/)
+## 🤝 Contributing
 
-### ইনস্টলেশন
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-১. এই রিপোজিটরিটি ক্লোন করুন:
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
 
-```bash
-git clone https://github.com/your-username/IOM-Daily-Azkar.git
-```
+1.  Fork the Project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
 
-২. প্রজেক্ট ডিরেক্টরিতে যান:
+## 📜 License
 
-```bash
-cd IOM-Daily-Azkar
-```
+Distributed under the MIT License. See `LICENSE` for more information.
 
-৩. Flutter প্যাকেজগুলো ইনস্টল করুন:
+## 📧 Contact
 
-```bash
-flutter pub get
-```
+Your Name - [soaib.softdev@gmail.com](mailto:soaib.softdev@gmail.com)
 
-### অ্যাপ রান করুন
-
-একটি সংযুক্ত ডিভাইস বা এমুলেটরে অ্যাপটি রান করতে:
-
-```bash
-flutter run
-```
-
-অথবা, নির্দিষ্ট প্ল্যাটফর্মে রান করতে:
-
-```bash
-flutter run --debug -d <device_id> # যেমন: chrome, web-server, windows, android, ios
-```
-
-### বিল্ড করুন
-
-রিলিজ APK/IPA বিল্ড করতে:
-
-```bash
-flutter build apk --release
-# অথবা
-flutter build appbundle --release # Google Play Store এর জন্য
-# অথবা
-flutter build ios --release # iOS এর জন্য
-```
-
-## 🤝 অবদান
-
-আপনার অবদান সর্বদা স্বাগত! যদি আপনি কোনো বাগ খুঁজে পান বা কোনো নতুন বৈশিষ্ট্য যোগ করতে চান, তাহলে অনুগ্রহ করে একটি পুল রিকোয়েস্ট (Pull Request) জমা দিন।
-
-## 📧 যোগাযোগ
-
-যদি আপনার কোনো প্রশ্ন বা পরামর্শ থাকে, তাহলে অনুগ্রহ করে যোগাযোগ করুন:
-
-[আপনার ইমেইল ঠিকানা]
-
----
-
-**IOM Daily Azkar** - আপনার আধ্যাত্মিক জীবনকে আরও সমৃদ্ধ করুন。
+Project Link: [https://github.com/mdsiamulislam/IOM-Daily-Azkar](https://github.com/mdsiamulislam/IOM-Daily-Azkar)
