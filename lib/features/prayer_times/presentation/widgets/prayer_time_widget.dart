@@ -327,7 +327,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
             ],
           ),
 
-          SizedBox(height: isSmallScreen ? 6 : 8),
 
           // Main Display for Current/Next Prayer (responsive)
           Column(

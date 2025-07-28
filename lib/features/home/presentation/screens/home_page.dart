@@ -407,46 +407,54 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   }
 
   Widget _buildHadithCard(String text, String ref) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-      ),
-      child: Column(
-        children: [
-          Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppColors.primaryGreen,
-                fontStyle: FontStyle.italic,
-                height: 1.5,
-              )
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))
+            ],
           ),
-          if (ref.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-                "রেফারেন্স: $ref",
+          child: Column(
+            children: [
+              Text(
+                text,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: AppColors.primaryGreen,
-                  fontWeight: FontWeight.w500,
-                )
-            ),
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: const Icon(Icons.share, color: AppColors.primaryGreen),
-              onPressed: () => Share.share("$text${ref.isNotEmpty ? '\n\nহাদিস: $ref' : ''}"),
-            ),
+                  fontStyle: FontStyle.italic,
+                  height: 1.5,
+                ),
+              ),
+              if (ref.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  "রেফারেন্স: $ref",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.primaryGreen .withOpacity(0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          bottom: 4,
+          right: 8,
+          child: IconButton(
+            icon: const Icon(Icons.share, color: AppColors.primaryGreen, size: 20),
+            onPressed: () => Share.share("$text${ref.isNotEmpty ? '\n\nহাদিস: $ref' : ''}"),
+          ),
+        ),
+      ],
     );
   }
 

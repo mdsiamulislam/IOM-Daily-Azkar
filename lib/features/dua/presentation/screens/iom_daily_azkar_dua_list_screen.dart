@@ -151,12 +151,29 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
       if (index == currentIndex) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Text(
-            priority,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.green,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.shade100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              priority == 'High'
+                  ? 'বাধ্যতামূলক'
+                  : priority == 'Medium'
+                      ? 'মধ্যম অগ্রাধিকার'
+                      : priority == 'Low'
+                          ? 'কম অগ্রাধিকার'
+                          : priority == 'Self Rukaiya'
+                              ? 'নিজের রুকিয়া'
+                              : priority,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         );
