@@ -1,14 +1,7 @@
 # IOM Daily Azkar - আপনার দৈনন্দিন আজকার ও দোয়ার সঙ্গী
 
-![Cover](httpse://github.com/IOM-Daily-Azkar/blob/main/assets/cover.jpeg)
+![Cover](https://github.com/mdsiamulislam/IOM-Daily-Azkar/blob/main/assets/cover.jpeg)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
-  <img src="https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart">
-  <img src="https://img.shields.io/github/license/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="License">
-  <img src="https://img.shields.io/github/stars/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="Stars">
-  <img src="https://img.shields.io/github/forks/IOM-Daily-Azkar/IOM-Daily-Azkar" alt="Forks">
-</p>
 
 <p align="center">
   <a href="https://play.google.com/store/apps/details?id=com.proappsbuild.iomdailyazkar">
