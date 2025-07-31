@@ -303,6 +303,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
           final String footnote = currentDua['footnote'] ?? '';
           final String benefitorhadith = currentDua['benefitorhadith'] ?? '';
           final String other = currentDua['other'] ?? '';
+          final String untitled = currentDua['untitled'] ?? '';
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -543,6 +544,19 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                         _buildSectionTitle('অন্যান্য'),
                         Text(
                           other,
+                          style: TextStyle(
+                            fontSize: banglaFontSize,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.justify,
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      // Untitled Section
+                      if (untitled.isNotEmpty) ...[
+                        const Divider(height: 24),
+                        Text(
+                          untitled,
                           style: TextStyle(
                             fontSize: banglaFontSize,
                             height: 1.5,

@@ -98,7 +98,7 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
         backgroundColor: AppColors.primaryGreen,
         iconTheme: const IconThemeData(color: AppColors.white),
         title: const Text(
-          'দোয়ার তালিকা',
+          'হেফাজত এর আমল সমূহ',
           style: TextStyle(
             color: AppColors.white,
             fontSize: 20,
@@ -149,34 +149,7 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
 
       // Check if this is the header for this priority
       if (index == currentIndex) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.green.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              priority == 'High'
-                  ? 'বাধ্যতামূলক'
-                  : priority == 'Medium'
-                      ? 'মধ্যম অগ্রাধিকার'
-                      : priority == 'Low'
-                          ? 'কম অগ্রাধিকার'
-                          : priority == 'Self Rukaiya'
-                              ? 'নিজের রুকিয়া'
-                              : priority,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.green,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
+        return LevelName(priority: priority);
       }
       currentIndex++;
 
@@ -198,5 +171,99 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
     }
 
     return const SizedBox.shrink();
+  }
+}
+
+
+class LevelName extends StatelessWidget {
+  const LevelName({
+    super.key,
+    required this.priority,
+  });
+
+  final String priority;
+
+  @override
+  Widget build(BuildContext context) {
+    final headerText = priority == 'High'
+        ? 'প্রাথমিক স্তর (সাধারণ নিরাপত্তা)'
+        : priority == 'Medium'
+        ? 'দ্বিতীয় স্তর (বিশেষ নিরাপত্তা)'
+        : priority == 'Low'
+        ? 'তৃতীয় স্তর (উচ্চমানের নিরাপত্তা)'
+        : priority == 'Self Rukaiya'
+        ? 'হাদিসের কিছু শক্তিশালী রুকইয়াহ বা তিব্বে নববি'
+        : priority;
+
+    final descriptionText = priority == 'High'
+        ? 'যদি আপনার কোন রুকইয়াহ বিষয়ক সমস্যা না থেকে থাকে এবং নামাজের পর কম সময় দিতে পারেন, তবে এই আমলগুলো দিয়ে শুরু করতে পারেন। এই আমলগুলো ইনশাআল্লাহ হেফাজতের জন্য কাজ করবে। তবে এই স্তরের আমলগুলোতে অভ্যস্ত হয়ে গেলে আস্তে আস্তে নিচের আমলগুলো শুরু করতে হবে।'
+        : priority == 'Medium'
+        ? 'যদি আপনার রুকইয়াহ বিষয়ক সামান্য কিছু সমস্যা থাকে অথবা আশংকা করছেন তবে ১ম স্তরের সাথে এই আমলগুলো যোগ করতে হবে। তবে ১মগুলো সবচেয়ে শক্তিশালী।'
+        : priority == 'Low'
+        ? 'যদি আপনার রুকইয়াহ বিষয়ক সমস্যা থাকে, কিংবা জিন-শয়তান আপনাকে নিয়ন্ত্রণ করছে তবে উপরের ১ থেকে শুরু করে শেষ পর্যন্ত পড়তে হবে।'
+        : priority == 'Self Rukaiya'
+        ? ' এই স্তরের আমলগুলো হাদিসের শক্তিশালী রুকইয়াহ বা তিব্বে নববি। এই আমলগুলো পড়লে ইনশাআল্লাহ শয়তান ও জিনের আক্রমণ থেকে মুক্তি পাওয়া যাবে।'
+        : '';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.primaryGreen,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                headerText,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: 4),
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Text(
+                  descriptionText,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              if (priority == 'High')
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.all(8),
+                  child: const Text(
+                    'নিচের প্রতিটি দুআর ক্ষেত্রে অবশ্যই আরবি দেখে পড়তে হবে কেননা আরবি হরফের উচ্চারণ কখনোই বাংলাতে লেখা সম্ভব নয়। ভুল উচ্চারণ করলে অর্থ বিকৃত হয়ে যাওয়ার সম্ভাবনা থাকে',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
