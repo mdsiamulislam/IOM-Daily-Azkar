@@ -31,11 +31,15 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   List<dynamic> fatwaData = [];
   List<dynamic> iomdailyazkar = [];
   List<dynamic> data = [];
+  List<dynamic> ads = [];
   bool isLoading = true;
   int randomIndex = 0;
 
   // Add ScrollController for better control
   ScrollController? _scrollController;
+
+  // Cache valid categories to prevent recalculation during scroll
+  List<dynamic> _validCategories = [];
 
   // Keep alive to prevent rebuilding
   @override
@@ -65,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
       final storedDuaData = prefs.getString('duaData');
       final storedFatwaData = prefs.getString('ifatwaData');
       final storedIomdailyazkarData = prefs.getString('iomdailyazkar');
+      final storedAdsData = prefs.getString('ads'); // Add this line to load ads from storage
 
       if (storedCategories != null &&
           storedHadithList != null &&
@@ -78,8 +83,17 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         duaData = json.decode(storedDuaData);
         fatwaData = json.decode(storedFatwaData);
         iomdailyazkar = json.decode(storedIomdailyazkarData);
+
+        // Load ads from storage if available
+        if (storedAdsData != null) {
+          ads = json.decode(storedAdsData);
+        }
+
         fatwaData = fatwaData.where((e) =>
         e['question_title'] != null && e['answer'] != null).toList();
+
+        // Cache valid categories to prevent recalculation during scroll
+        _cacheValidCategories();
 
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
@@ -108,20 +122,29 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
         final result = json.decode(response.body);
         final prefs = await SharedPreferences.getInstance();
 
+        // Debug: Print full response to see the structure
+        print("Full API response: ${response.body}");
+        print("Parsed ads from API: ${result['ads']}");
+
         await prefs.setString('categories', json.encode(result['categories'] ?? []));
         await prefs.setString('hadithList', json.encode(result['hadith'] ?? []));
         await prefs.setString('duaData', json.encode(result['dua'] ?? []));
         await prefs.setString('data', json.encode(result['data'] ?? []));
         await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? []));
         await prefs.setString('iomdailyazkar', json.encode(result['iomdailyazkar'] ?? []));
+        await prefs.setString('ads', json.encode(result['ads'] ?? [])); // Store ads data
 
         categories = result['categories'] ?? [];
         hadithList = result['hadith'] ?? [];
         duaData = result['dua'] ?? [];
         iomdailyazkar = result['iomdailyazkar'] ?? [];
+        ads = result['ads'] ?? [];
         fatwaData = (result['ifatwa'] ?? []).where((e) =>
         e['question_title'] != null && e['answer'] != null).toList();
         data = result['data'] ?? [];
+
+        // Cache valid categories to prevent recalculation during scroll
+        _cacheValidCategories();
 
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
@@ -156,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     'access_time': Icons.access_time,
     'quran': FontAwesomeIcons.bookOpen,
     'mosque': FontAwesomeIcons.mosque,
-    'prayer': FontAwesomeIcons.prayingHands,
+    'calendarCheck': FontAwesomeIcons.calendarCheck,
     'help': Icons.help_outline,
     'dua': FontAwesomeIcons.pray,
     'fatwa': FontAwesomeIcons.bookOpenReader,
@@ -209,6 +232,82 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     }
   }
 
+  // Cache valid categories to prevent recalculation during scroll
+  void _cacheValidCategories() {
+    _validCategories = categories.where((category) {
+      final title = category["title"]?.toString().trim() ?? "";
+      final tag = category["tag"]?.toString().trim() ?? "";
+      return title.isNotEmpty && tag.isNotEmpty;
+    }).toList();
+  }
+
+  // Convert Google Drive sharing link to direct download link
+  String _convertGoogleDriveUrl(String url) {
+    if (url.contains('drive.google.com') && url.contains('/file/d/')) {
+      // Extract file ID from Google Drive URL
+      RegExp regExp = RegExp(r'/file/d/([a-zA-Z0-9-_]+)');
+      RegExpMatch? match = regExp.firstMatch(url);
+
+      if (match != null) {
+        String fileId = match.group(1)!;
+        // Convert to direct download link
+        return 'https://drive.google.com/uc?export=view&id=$fileId';
+      }
+    }
+    return url; // Return original URL if not a Google Drive link
+  }
+
+  // Check if banner should be shown
+  bool _shouldShowBanner() {
+    // Don't show if loading
+    if (isLoading) return false;
+
+    // Don't show if ads array is empty
+    if (ads.isEmpty) return false;
+
+    // Don't show if first ad doesn't have a valid link
+    if (ads[0] == null || ads[0]['link'] == null) return false;
+
+    // Don't show if link is empty or invalid
+    String imageUrl = ads[0]['link'].toString().trim();
+    if (imageUrl.isEmpty || !imageUrl.startsWith('http')) return false;
+
+    return true;
+  }
+
+  // Banner Image Builder Method
+  Widget _buildBannerImage() {
+    String originalUrl = ads[0]['link'].toString().trim();
+    String imageUrl = _convertGoogleDriveUrl(originalUrl);
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      height: 200,
+      width: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) return child;
+        return Container(
+          height: 200,
+          width: double.infinity,
+          color: Colors.grey[200],
+          child: Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                  : null,
+              color: AppColors.primaryGreen,
+            ),
+          ),
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        // Return empty container on error (hide banner)
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
@@ -246,6 +345,8 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
           color: AppColors.primaryGreen,
           child: CustomScrollView(
             controller: _scrollController,
+            physics: const ClampingScrollPhysics(), // Better scroll physics
+            cacheExtent: 1000, // Cache more content for smoother scrolling
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.all(16),
@@ -276,13 +377,33 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                 ),
               ),
 
+              // Banner Section - Only show if banner should be displayed
+              if (_shouldShowBanner())
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverToBoxAdapter(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.all(
+                        Radius.circular(20),
+                      ),
+                      child: _buildBannerImage(),
+                    ),
+                  ),
+                ),
+
+              // Add spacing only if banner is shown
+              if (_shouldShowBanner())
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 16),
+                ),
+
               // Category Grid
               if (isLoading)
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: _buildShimmerGridSliver(),
                 )
-              else
+              else if (_validCategories.isNotEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: _buildCategoryGridSliver(),
@@ -459,70 +580,73 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   }
 
   Widget _buildCategoryGridSliver() {
-    final validCategories = categories.where((category) {
-      final title = category["title"]?.toString().trim() ?? "";
-      final tag = category["tag"]?.toString().trim() ?? "";
-      return title.isNotEmpty && tag.isNotEmpty;
-    }).toList();
+    // Use cached categories to prevent recalculation during scroll
+    final crossAxisCount = _getCrossAxisCount(context);
+    final aspectRatio = _getChildAspectRatio(context);
 
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _getCrossAxisCount(context),
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: _getChildAspectRatio(context),
+        childAspectRatio: aspectRatio,
       ),
       delegate: SliverChildBuilderDelegate(
             (context, index) {
-          final category = validCategories[index];
+          final category = _validCategories[index];
           final String title = category["title"];
           final String tag = category["tag"].toString().trim();
           final String iconName = category["icon_name"] ?? "help";
 
-          return Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DuaListScreen(tag: tag, duaData: duaData),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
-                ),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    getIconFromName(iconName),
-                    const SizedBox(height: 10),
-                    Flexible(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 15,
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          return _buildCategoryCard(title, tag, iconName);
+        },
+        childCount: _validCategories.length,
+      ),
+    );
+  }
+
+  // Extract category card building to separate method for better performance
+  Widget _buildCategoryCard(String title, String tag, String iconName) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DuaListScreen(tag: tag, duaData: duaData),
             ),
           );
         },
-        childCount: validCategories.length,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2))],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              getIconFromName(iconName),
+              const SizedBox(height: 10),
+              Flexible(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -542,12 +666,16 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   }
 
   Widget _buildShimmerGridSliver() {
+    // Use consistent values to prevent layout shifts
+    final crossAxisCount = _getCrossAxisCount(context);
+    final aspectRatio = _getChildAspectRatio(context);
+
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: _getCrossAxisCount(context),
+        crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: _getChildAspectRatio(context),
+        childAspectRatio: aspectRatio,
       ),
       delegate: SliverChildBuilderDelegate(
             (context, index) {
@@ -562,9 +690,8 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
             ),
           );
         },
-        childCount: 4,
+        childCount: 6, // Show consistent number of shimmer cards
       ),
     );
   }
 }
-
