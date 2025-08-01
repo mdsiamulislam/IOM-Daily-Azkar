@@ -12,10 +12,10 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/constants.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../about/presentation/screens/about_app_screen.dart';
-import '../../../about/presentation/screens/our_apps_screen.dart';
-import '../../../dua/presentation/screens/dua_list_screen.dart';
-import '../../../prayer_times/presentation/widgets/prayer_time_widget.dart';
+import '../../about/presentation/screens/about_app_screen.dart';
+import '../../about/presentation/screens/our_apps_screen.dart';
+import '../../dua/presentation/screens/dua_list_screen.dart';
+import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
