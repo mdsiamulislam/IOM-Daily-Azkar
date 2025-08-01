@@ -175,7 +175,7 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
 }
 
 
-class LevelName extends StatelessWidget {
+class LevelName extends StatefulWidget {
   const LevelName({
     super.key,
     required this.priority,
@@ -184,9 +184,18 @@ class LevelName extends StatelessWidget {
   final String priority;
 
   @override
+  State<LevelName> createState() => _LevelNameState();
+}
+
+class _LevelNameState extends State<LevelName> {
+  bool _isExpanded = true;
+
+  @override
   Widget build(BuildContext context) {
+    final priority = widget.priority;
+
     final headerText = priority == 'High'
-        ? 'প্রাথমিক স্তর (সাধারণ নিরাপত্তা)'
+        ? 'প্রাথমিক স্তর (সাধারণ নিরাপত্তা): সর্বনিম্ন আমল: সবচেয়ে বেশি শক্তিশালী'
         : priority == 'Medium'
         ? 'দ্বিতীয় স্তর (বিশেষ নিরাপত্তা)'
         : priority == 'Low'
@@ -216,50 +225,68 @@ class LevelName extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                headerText,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              GestureDetector(
+                onTap: () => setState(() => _isExpanded = !_isExpanded),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        headerText,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    Icon(
+                      _isExpanded
+                          ? Icons.keyboard_arrow_up
+                          : Icons.keyboard_arrow_down,
+                      color: Colors.white,
+                    )
+                  ],
                 ),
-                textAlign: TextAlign.left,
               ),
-              const SizedBox(height: 4),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                padding: const EdgeInsets.all(8),
-                child: Text(
-                  descriptionText,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
-              if (priority == 'High')
+              if (_isExpanded) ...[
+                const SizedBox(height: 4),
                 Container(
                   width: double.infinity,
-                  margin: const EdgeInsets.only(top: 8.0),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade100,
+                    color: Colors.green.shade50,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   padding: const EdgeInsets.all(8),
-                  child: const Text(
-                    'নিচের প্রতিটি দুআর ক্ষেত্রে অবশ্যই আরবি দেখে পড়তে হবে কেননা আরবি হরফের উচ্চারণ কখনোই বাংলাতে লেখা সম্ভব নয়। ভুল উচ্চারণ করলে অর্থ বিকৃত হয়ে যাওয়ার সম্ভাবনা থাকে',
-                    style: TextStyle(
+                  child: Text(
+                    descriptionText,
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: Colors.red,
+                      color: Colors.green,
                     ),
                   ),
                 ),
+                if (priority == 'High')
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8.0),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: const Text(
+                      'নিচের প্রতিটি দুআর ক্ষেত্রে অবশ্যই আরবি দেখে পড়তে হবে কেননা আরবি হরফের উচ্চারণ কখনোই বাংলাতে লেখা সম্ভব নয়। ভুল উচ্চারণ করলে অর্থ বিকৃত হয়ে যাওয়ার সম্ভাবনা থাকে',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+              ]
             ],
           ),
         ),

@@ -268,8 +268,8 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                   delegate: SliverChildListDelegate([
                     isLoading ? _buildShimmerCard() : HorizontalCard(
                       duaData: iomdailyazkar,
-                      title: "IOM নির্বাচিত দু'আ",
-                      description: "IOM-এর বিশেষ বিন্যাসে সাজানো দু'আ সমূহ",
+                      title: "IOM এর নির্বাচিত বাধ্যতামূলক সকাল সন্ধ্যার  দু'আ",
+                      description: "IOM-এর বিশেষ বিন্যাসে সাজানো দু'আ সমূহ ",
                       icon: Icons.checklist,
                     ),
                   ]),
