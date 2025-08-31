@@ -16,6 +16,7 @@ import '../../about/presentation/screens/about_app_screen.dart';
 import '../../about/presentation/screens/our_apps_screen.dart';
 import '../../dua/presentation/screens/dua_list_screen.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
+import '../widget/dual_time_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -354,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 10),
                     // Prayer Times Widget
-                    const CombinedPrayerTimesWidget(),
+                    DualTimeCard(),
                     const SizedBox(height: 16),
                     // Hadith Card
                     isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
