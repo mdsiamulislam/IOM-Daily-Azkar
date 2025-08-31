@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/local_storage/local_prayer_time.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 
 class DualTimeCard extends StatefulWidget {
@@ -25,77 +26,103 @@ class _DualTimeCardState extends State<DualTimeCard> {
 
 
 
-class PrayerTimeWidget extends StatelessWidget {
+
+
+class PrayerTimeWidget extends StatefulWidget {
   const PrayerTimeWidget({super.key});
 
   @override
+  State<PrayerTimeWidget> createState() => _PrayerTimeWidgetState();
+}
+
+class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
+  Map<String, String?> savedTimes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedTimes();
+  }
+
+  Future<void> _loadSavedTimes() async {
+    final data = await LocalPrayerTime().getPrayerTime();
+    setState(() {
+      savedTimes = data;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        // বাম পাশ (শহরের নামাজের সময়)
-        Expanded(
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "আপনার শহরের নামাজের সময়",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
+        Row(
+          children: [
+            // বাম পাশ (শহরের নামাজের সময়)
+            Expanded(
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "আপনার শহরের নামাজের সময়",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildPrayerRow("ফজর", "৪:৩০ AM - ৫:০০ AM"),
+                      _buildPrayerRow("যোহর", "১২:৪৫ PM - ১:৩০ PM"),
+                      _buildPrayerRow("আসর", "৪:১৫ PM - ৪:৪৫ PM"),
+                      _buildPrayerRow("মাগরিব", "৬:৩০ PM - ৬:৫০ PM"),
+                      _buildPrayerRow("ইশা", "৮:০০ PM - ৮:৩০ PM"),
+                    ],
                   ),
-                  const Divider(),
-                  _buildPrayerRow("ফজর", "৪:৩০ AM - ৫:০০ AM"),
-                  _buildPrayerRow("যোহর", "১২:৪৫ PM - ১:৩০ PM"),
-                  _buildPrayerRow("আসর", "৪:১৫ PM - ৪:৪৫ PM"),
-                  _buildPrayerRow("মাগরিব", "৬:৩০ PM - ৬:৫০ PM"),
-                  _buildPrayerRow("ইশা", "৮:০০ PM - ৮:৩০ PM"),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
 
-        const VerticalDivider(width: 10),
+            const VerticalDivider(width: 10),
 
-        // ডান পাশ (মসজিদের জামাতের সময়)
-        Expanded(
-          child: Card(
-            elevation: 4,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "স্থানীয় মসজিদের জামাতের সময়",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
+            // ডান পাশ (সেভ করা স্থানীয় মসজিদের জামাতের সময়)
+            Expanded(
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        savedTimes['masqueName'] ?? "স্থানীয় মসজিদের জামাতের সময়",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Divider(),
+                      _buildPrayerRow("ফজর", savedTimes['fajar'] ?? "--"),
+                      _buildPrayerRow("যোহর", savedTimes['zuhr'] ?? "--"),
+                      _buildPrayerRow("আসর", savedTimes['asr'] ?? "--"),
+                      _buildPrayerRow("মাগরিব", savedTimes['maghrib'] ?? "--"),
+                      _buildPrayerRow("ইশা", savedTimes['isha'] ?? "--"),
+                    ],
                   ),
-                  const Divider(),
-                  _buildPrayerRow("ফজর", "৪:৩০ AM"),
-                  _buildPrayerRow("যোহর", "১:১৫ PM"),
-                  _buildPrayerRow("আসর", "৪:৪৫ PM"),
-                  _buildPrayerRow("মাগরিব", "৬:৩৫ PM"),
-                  _buildPrayerRow("ইশা", "৮:১৫ PM"),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ],
     );
@@ -125,3 +152,4 @@ class PrayerTimeWidget extends StatelessWidget {
     );
   }
 }
+

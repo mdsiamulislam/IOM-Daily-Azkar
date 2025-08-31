@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:iomdailyazkar/features/home/widget/horizontal_card.dart';
+import 'package:iomdailyazkar/features/prayer_times/presentation/screens/prayer_time_setting_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -459,6 +460,37 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                 ),
               ],
             ),
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.access_time,
+              color: Colors.green,
+            ),
+            title: Text(
+              'নামাজের সময় সেট করুন',
+              style: AppTextStyles.regular.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            trailing: const Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            tileColor: Colors.grey.shade100,
+            hoverColor: Colors.green.withOpacity(0.1),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PrayerTimeSettingScreen()),
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.apps),
