@@ -1,28 +1,26 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:iomdailyazkar/features/prayer_times/controllers/change_widget.dart';
 
 import '../../../core/local_storage/local_prayer_time.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
+class DualTimeCard extends StatelessWidget {
+  DualTimeCard({super.key});
 
-class DualTimeCard extends StatefulWidget {
-  const DualTimeCard({super.key});
-
-  @override
-  State<DualTimeCard> createState() => _DualTimeCardState();
-}
-
-class _DualTimeCardState extends State<DualTimeCard> {
-
-  bool isSingleTimeTable = false;
+  final ChangeWidget _changeWidget = Get.put(ChangeWidget());
 
   @override
   Widget build(BuildContext context) {
-    return
-      isSingleTimeTable
+    return Obx(() {
+      // This will automatically rebuild when isSingleTimeTable changes
+      return _changeWidget.isSingleTimeTable.value
           ? CombinedPrayerTimesWidget()
           : PrayerTimeWidget();
+    });
   }
 }
+
 
 
 

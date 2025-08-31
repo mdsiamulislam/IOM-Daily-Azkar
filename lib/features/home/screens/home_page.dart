@@ -555,6 +555,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
               Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutAppScreen()));
             },
           ),
+
         ],
       ),
     );
