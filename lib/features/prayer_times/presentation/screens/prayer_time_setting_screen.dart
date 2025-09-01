@@ -30,7 +30,7 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
   final ChangeWidget _changeWidget = Get.put(ChangeWidget());
 
   // Reactive variables
-  final RxString _selectedCity = CityCoordinates.cityMap.keys.first.obs;
+  final RxString _selectedCity = 'Dhaka'.obs; // Default to Dhaka
   final Rx<TimeTableOption> _selectedOption = TimeTableOption.dual.obs;
 
   @override
@@ -38,36 +38,90 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
     super.initState();
     _loadSavedTimes();
     _loadPreference();
+    _loadSelectedCity();
+  }
+
+  @override
+  void dispose() {
+    _masqueController.dispose();
+    _fajarController.dispose();
+    _zuhrController.dispose();
+    _asrController.dispose();
+    _maghribController.dispose();
+    _ishaController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSavedTimes() async {
     final data = await _localPrayerTime.getPrayerTime();
-    _masqueController.text = data['masqueName'] ?? '';
-    _fajarController.text = data['fajar'] ?? '';
-    _zuhrController.text = data['zuhr'] ?? '';
-    _asrController.text = data['asr'] ?? '';
-    _maghribController.text = data['maghrib'] ?? '';
-    _ishaController.text = data['isha'] ?? '';
+    setState(() {
+      _masqueController.text = data['masqueName'] ?? '';
+      _fajarController.text = data['fajar'] ?? '';
+      _zuhrController.text = data['zuhr'] ?? '';
+      _asrController.text = data['asr'] ?? '';
+      _maghribController.text = data['maghrib'] ?? '';
+      _ishaController.text = data['isha'] ?? '';
+    });
+  }
+
+  Future<void> _loadSelectedCity() async {
+    final city = await UserPref().getLocation();
+    _selectedCity.value = city;
   }
 
   Future<void> _saveTimes() async {
-    await _localPrayerTime.savePrayerTime(
-      masqueName: _masqueController.text,
-      fajar: _fajarController.text,
-      zuhr: _zuhrController.text,
-      asr: _asrController.text,
-      maghrib: _maghribController.text,
-      isha: _ishaController.text,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("নামাজের সময় সংরক্ষিত হয়েছে ✅")),
-    );
+    try {
+      await _localPrayerTime.savePrayerTime(
+        masqueName: _masqueController.text,
+        fajar: _fajarController.text,
+        zuhr: _zuhrController.text,
+        asr: _asrController.text,
+        maghrib: _maghribController.text,
+        isha: _ishaController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("নামাজের সময় সংরক্ষিত হয়েছে ✅"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("ত্রুটি: ${e.toString()}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _saveSelectedCity(String city) async {
+     UserPref().setLocation(city);
+    _selectedCity.value = city;
   }
 
   Future<void> _loadPreference() async {
-    final pref = await UserPref().getPrayerTimeSingle();
-    _selectedOption.value = pref ? TimeTableOption.single : TimeTableOption.dual;
-    _changeWidget.isSingleTimeTable.value = pref;
+    try {
+      final pref = await UserPref().getPrayerTimeSingle();
+      _selectedOption.value = pref ? TimeTableOption.single : TimeTableOption.dual;
+      _changeWidget.isSingleTimeTable.value = pref;
+    } catch (e) {
+      // Default to dual if there's an error
+      _selectedOption.value = TimeTableOption.dual;
+      _changeWidget.isSingleTimeTable.value = false;
+    }
+  }
+
+  _setCity(String city) {
+    if (CityCoordinates.cityMap.containsKey(city)) {
+      _selectedCity.value = city;
+      UserPref().setLocation(city);
+    }
   }
 
   @override
@@ -75,7 +129,7 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "নামাজের সময় সেট করুন",
+          "নামাজের সময় সেট করুন",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -84,97 +138,211 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Radio buttons
-            Obx(() {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "নামাজের সময়সূচি দেখার ধরন",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
+            // Radio buttons for time table type selection
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "নামাজের সময়সূচি দেখার ধরন",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                     ),
-                  ),
-                  RadioListTile<TimeTableOption>(
-                    title: const Text("Single Time Card"),
-                    value: TimeTableOption.single,
-                    groupValue: _selectedOption.value,
-                    onChanged: (value) {
-                      _selectedOption.value = value!;
-                      UserPref().setPrayerTimeSingle(true);
-                      _changeWidget.isSingleTimeTable.value = true;
-                    },
-                  ),
-                  RadioListTile<TimeTableOption>(
-                    title: const Text("Dual Time Card"),
-                    value: TimeTableOption.dual,
-                    groupValue: _selectedOption.value,
-                    onChanged: (value) {
-                      _selectedOption.value = value!;
-                      UserPref().setPrayerTimeSingle(false);
-                      _changeWidget.isSingleTimeTable.value = false;
-                    },
-                  ),
-                ],
-              );
-            }),
-
-            const SizedBox(height: 16),
-
-            // Time Table Widget
-            Obx(() {
-              return _selectedOption.value == TimeTableOption.dual
-                  ? const PrayerTimeWidget()
-                  : const CombinedPrayerTimesWidget();
-            }),
+                    const SizedBox(height: 8),
+                    Obx(() {
+                      return Column(
+                        children: [
+                          RadioListTile<TimeTableOption>(
+                            title: const Text("Single Time Card (শুধু নামাজের সময়)"),
+                            subtitle: const Text("একটি কার্ডে সব নামাজের সময়"),
+                            value: TimeTableOption.single,
+                            groupValue: _selectedOption.value,
+                            activeColor: Colors.green,
+                            onChanged: (value) {
+                              _selectedOption.value = value!;
+                              UserPref().setPrayerTimeSingle(true);
+                              _changeWidget.isSingleTimeTable.value = true;
+                            },
+                          ),
+                          RadioListTile<TimeTableOption>(
+                            title: const Text("Dual Time Card (দুটি কার্ড)"),
+                            subtitle: const Text("শহরের সময় + মসজিদের জামাতের সময়"),
+                            value: TimeTableOption.dual,
+                            groupValue: _selectedOption.value,
+                            activeColor: Colors.green,
+                            onChanged: (value) {
+                              _selectedOption.value = value!;
+                              UserPref().setPrayerTimeSingle(false);
+                              _changeWidget.isSingleTimeTable.value = false;
+                            },
+                          ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ),
 
             const SizedBox(height: 20),
 
-            // City and Input Fields (only for dual)
+            // Preview Card
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.preview, color: Colors.green, size: 20),
+                        const SizedBox(width: 8),
+                        const Text(
+                          "প্রিভিউ",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Obx(() {
+                      return _selectedOption.value == TimeTableOption.dual
+                          ? DualTimeCard()
+                          : const CombinedPrayerTimesWidget();
+                    }),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // City Selection and Mosque Times (only for dual option)
             Obx(() {
               if (_selectedOption.value == TimeTableOption.dual) {
                 return Column(
                   children: [
-                    DropdownButtonFormField<String>(
-                      value: _selectedCity.value,
-                      decoration: InputDecoration(
-                        labelText: "নামাযের সময়ের জন্য শহর নির্বাচন করুন",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    // City Selection Card
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.location_city, color: Colors.green, size: 20),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "শহর নির্বাচন করুন",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            DropdownButtonFormField<String>(
+                              value: CityCoordinates.cityMap.containsKey(_selectedCity.value)
+                                  ? _selectedCity.value
+                                  : CityCoordinates.cityMap.keys.first,
+                              decoration: InputDecoration(
+                                labelText: "নামাযের সময়ের জন্য শহর নির্বাচন করুন",
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                prefixIcon: const Icon(Icons.location_on, color: Colors.green),
+                              ),
+                              items: CityCoordinates.cityMap.keys.map((city) {
+                                return DropdownMenuItem<String>(
+                                  value: city,
+                                  child: Text(city, style: const TextStyle(fontSize: 16)),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  _saveSelectedCity(value);
+                                  _setCity(value);
+
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                      items: CityCoordinates.cityMap.keys.map((city) {
-                        return DropdownMenuItem<String>(
-                          value: city,
-                          child: Text(city, style: const TextStyle(fontSize: 16)),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        _selectedCity.value = value!;
-                        final coordinates = CityCoordinates.cityMap[value]!;
-                        print('Selected city: $value, Coordinates: ${coordinates.latitude}, ${coordinates.longitude}');
-                      },
                     ),
 
                     const SizedBox(height: 16),
 
-                    _buildTextField("মসজিদের নাম", _masqueController),
-                    _buildTextField("ফজর", _fajarController, hint: "যেমনঃ ৪:৩০ AM"),
-                    _buildTextField("যোহর", _zuhrController, hint: "যেমনঃ ১:১৫ PM"),
-                    _buildTextField("আসর", _asrController, hint: "যেমনঃ ৪:৪৫ PM"),
-                    _buildTextField("মাগরিব", _maghribController, hint: "যেমনঃ ৬:৩০ PM"),
-                    _buildTextField("ইশা", _ishaController, hint: "যেমনঃ ৮:১৫ PM"),
+                    // Mosque Times Input Card
+                    Card(
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.mosque, color: Colors.green, size: 20),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "মসজিদের জামাতের সময়",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField("মসজিদের নাম", _masqueController),
+                            _buildTextField("ফজর", _fajarController, hint: "যেমনঃ ৪:৩০ AM"),
+                            _buildTextField("যোহর", _zuhrController, hint: "যেমনঃ ১:১৫ PM"),
+                            _buildTextField("আসর", _asrController, hint: "যেমনঃ ৪:৪৫ PM"),
+                            _buildTextField("মাগরিব", _maghribController, hint: "যেমনঃ ৬:৩০ PM"),
+                            _buildTextField("ইশা", _ishaController, hint: "যেমনঃ ৮:১৫ PM"),
 
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: _saveTimes,
-                      icon: const Icon(Icons.save, color: Colors.white),
-                      label: const Text("সংরক্ষণ করুন", style: TextStyle(fontSize: 18, color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        minimumSize: const Size(double.infinity, 50),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _saveTimes,
+                                icon: const Icon(Icons.save, color: Colors.white),
+                                label: const Text(
+                                    "সংরক্ষণ করুন",
+                                    style: TextStyle(fontSize: 18, color: Colors.white)
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -198,8 +366,29 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
           labelText: label,
           hintText: hint,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          prefixIcon: _getPrayerIcon(label),
         ),
       ),
     );
+  }
+
+  Widget? _getPrayerIcon(String label) {
+    switch (label) {
+      case "মসজিদের নাম":
+        return const Icon(Icons.mosque, color: Colors.green);
+      case "ফজর":
+        return const Icon(Icons.wb_twilight, color: Colors.orange);
+      case "যোহর":
+        return const Icon(Icons.wb_sunny, color: Colors.amber);
+      case "আসর":
+        return const Icon(Icons.wb_cloudy, color: Colors.orange);
+      case "মাগরিব":
+        return const Icon(Icons.sunny_snowing, color: Colors.deepOrange);
+      case "ইশা":
+        return const Icon(Icons.nightlight, color: Colors.indigo);
+      default:
+        return null;
+    }
   }
 }

@@ -246,7 +246,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
               Text(
                 prayer,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                   color: isActive ? Colors.green.shade700 : Colors.black,
                 ),
@@ -255,7 +255,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
               Text(
                 time,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: isActive ? Colors.green.shade600 : Colors.black54,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
                 ),
