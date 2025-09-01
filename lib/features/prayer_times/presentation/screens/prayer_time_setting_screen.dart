@@ -141,93 +141,59 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Radio buttons for time table type selection
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "নামাজের সময়সূচি দেখার ধরন",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Obx(() {
-                      return Column(
-                        children: [
-                          RadioListTile<TimeTableOption>(
-                            title: const Text("Single Time Card (শুধু নামাজের সময়)"),
-                            subtitle: const Text("একটি কার্ডে সব নামাজের সময়"),
-                            value: TimeTableOption.single,
-                            groupValue: _selectedOption.value,
-                            activeColor: Colors.green,
-                            onChanged: (value) {
-                              _selectedOption.value = value!;
-                              UserPref().setPrayerTimeSingle(true);
-                              _changeWidget.isSingleTimeTable.value = true;
-                            },
-                          ),
-                          RadioListTile<TimeTableOption>(
-                            title: const Text("Dual Time Card (দুটি কার্ড)"),
-                            subtitle: const Text("শহরের সময় + মসজিদের জামাতের সময়"),
-                            value: TimeTableOption.dual,
-                            groupValue: _selectedOption.value,
-                            activeColor: Colors.green,
-                            onChanged: (value) {
-                              _selectedOption.value = value!;
-                              UserPref().setPrayerTimeSingle(false);
-                              _changeWidget.isSingleTimeTable.value = false;
-                            },
-                          ),
-                        ],
-                      );
-                    }),
-                  ],
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "নামাজের সময়সূচি দেখার ধরন",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Obx(() {
+                  return Column(
+                    children: [
+                      RadioListTile<TimeTableOption>(
+                        title: const Text("Single Time Card (শুধু নামাজের সময়)"),
+                        subtitle: const Text("একটি কার্ডে সব নামাজের সময়"),
+                        value: TimeTableOption.single,
+                        groupValue: _selectedOption.value,
+                        activeColor: Colors.green,
+                        onChanged: (value) {
+                          _selectedOption.value = value!;
+                          UserPref().setPrayerTimeSingle(true);
+                          _changeWidget.isSingleTimeTable.value = true;
+                        },
+                      ),
+                      RadioListTile<TimeTableOption>(
+                        title: const Text("Dual Time Card (দুটি কার্ড)"),
+                        subtitle: const Text("শহরের সময় + মসজিদের জামাতের সময়"),
+                        value: TimeTableOption.dual,
+                        groupValue: _selectedOption.value,
+                        activeColor: Colors.green,
+                        onChanged: (value) {
+                          _selectedOption.value = value!;
+                          UserPref().setPrayerTimeSingle(false);
+                          _changeWidget.isSingleTimeTable.value = false;
+                        },
+                      ),
+                    ],
+                  );
+                }),
+              ],
             ),
 
             const SizedBox(height: 20),
 
             // Preview Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.preview, color: Colors.green, size: 20),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "প্রিভিউ",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Obx(() {
-                      return _selectedOption.value == TimeTableOption.dual
-                          ? DualTimeCard()
-                          : const CombinedPrayerTimesWidget();
-                    }),
-                  ],
-                ),
-              ),
-            ),
+            Obx(() {
+              return _selectedOption.value == TimeTableOption.dual
+                  ? DualTimeCard()
+                  : const CombinedPrayerTimesWidget();
+            }),
 
             const SizedBox(height: 20),
 

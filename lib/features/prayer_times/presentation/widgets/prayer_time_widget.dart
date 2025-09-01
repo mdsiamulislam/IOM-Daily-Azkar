@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adhan/adhan.dart';
+import 'package:iomdailyazkar/core/constants/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/city_data.dart';
@@ -218,7 +219,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     final isMediumScreen = _isMediumScreen(context);
 
     // Responsive sizing
-    final double containerPadding = isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
+    final double containerPadding = isSmallScreen ? 6.0 : isMediumScreen ? 8.0 : 10.0;
     final double iconSize = isSmallScreen ? 14.0 : 16.0;
     final double headerFontSize = isSmallScreen ? 11.0 : isMediumScreen ? 13.0 : 14.0;
     final double timerFontSize = isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
@@ -247,11 +248,10 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
         maxWidth: screenWidth * 0.95, // Ensure it doesn't exceed 95% of screen width
         minWidth: 300, // Minimum width for very small screens
       ),
-      margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.0 : 8.0),
       padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
-        color: const Color(0xFF2e7d32), // Dark green background
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.darkGreen,
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -396,12 +396,12 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                     child: IntrinsicHeight( // This ensures the container takes only the height it needs
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.white.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
+                          // color: isActive
+                          //     ? Colors.white.withOpacity(0.25)
+                          //     : Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
                           border: isActive
-                              ? Border.all(color: Colors.white, width: isSmallScreen ? 1.5 : 2)
+                              ? Border.all(color: Colors.white, width: 1)
                               : null,
                         ),
                         child: Padding(
@@ -411,27 +411,29 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               // Prayer name
-                              Text(
-                                name,
-                                style: AppTextStyles.bold.copyWith(
-                                  fontSize: prayerNameFontSize,
-                                  color: Colors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-
-                              SizedBox(height: isSmallScreen ? 2 : 4),
-
-                              // Prayer times
-                              Text(
-                                '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
-                                style: AppTextStyles.regular.copyWith(
-                                  fontSize: prayerTimeFontSize,
-                                  color: Colors.white70,
-                                ),
-                                maxLines: 2, // Allow 2 lines for time if needed
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: AppTextStyles.regular.copyWith(
+                                      fontSize: prayerTimeFontSize,
+                                      color: Colors.white70,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  // Prayer times
+                                  Text(
+                                    '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
+                                    style: AppTextStyles.bold.copyWith(
+                                      fontSize: prayerNameFontSize,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 2, // Allow 2 lines for time if needed
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
 
                               SizedBox(height: isSmallScreen ? 4 : 6),
@@ -440,7 +442,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                               LinearProgressIndicator(
                                 value: progress,
                                 backgroundColor: Colors.white.withOpacity(0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightGreenAccent),
+                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                                 borderRadius: BorderRadius.circular(isSmallScreen ? 3 : 5),
                                 minHeight: isSmallScreen ? 3 : 4,
                               ),
