@@ -4,6 +4,7 @@ import 'package:adhan/adhan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/city_data.dart';
+import '../../../../core/local_storage/user_pref.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../screens/forbidden_prayer_times_page.dart';
 
@@ -25,14 +26,12 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
   // Save selected city locally
   Future<void> _saveSelectedCity(String city) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedCity', city);
+     UserPref().setLocation(city);
   }
 
   // get the saved city from local storage
   Future<String> _getSavedCity() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('selectedCity') ?? 'Dhaka'; // Default to Dhaka if nothing saved
+    return UserPref().getLocation();
   }
 
   final Map<String, String> prayerLabels = {

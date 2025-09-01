@@ -6,8 +6,6 @@ import 'features/home/screens/home_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-
   runApp(const MyApp());
 
 }
