@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/core/local_storage/user_pref.dart';
 import 'package:iomdailyazkar/features/home/widget/horizontal_card.dart';
 import 'package:iomdailyazkar/features/prayer_times/presentation/screens/prayer_time_setting_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -16,7 +18,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../about/presentation/screens/about_app_screen.dart';
 import '../../about/presentation/screens/our_apps_screen.dart';
 import '../../dua/presentation/screens/dua_list_screen.dart';
-import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
+import '../../prayer_times/controllers/change_widget.dart';
 import '../widget/dual_time_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -48,12 +50,20 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   bool get wantKeepAlive => true;
 
   int generateRandomIndex(int max) => (DateTime.now().millisecondsSinceEpoch % max).toInt();
+  final ChangeWidget _changeWidget = Get.put(ChangeWidget());
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
     loadDataFromDevice();
+    _loadTimeTablePreference();
+  }
+
+  // Load the time table preference from SharedPreferences
+  Future<void> _loadTimeTablePreference() async {
+    final isSingle = await UserPref().getPrayerTimeSingle();
+    _changeWidget.isSingleTimeTable.value = isSingle;
   }
 
   @override
@@ -355,8 +365,10 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     const SizedBox(height: 10),
-                    // Prayer Times Widget
-                    DualTimeCard(),
+                    // Prayer Times Widget - Now using Obx to listen to reactive changes
+                    Obx(() => DualTimeCard(
+                      isSingleTimeTable: _changeWidget.isSingleTimeTable.value,
+                    )),
                     const SizedBox(height: 16),
                     // Hadith Card
                     isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
@@ -467,7 +479,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
               color: Colors.green,
             ),
             title: Text(
-              'নামাজের সময় সেট করুন',
+              'নামাজের সময় সেট করুন',
               style: AppTextStyles.regular.copyWith(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -489,7 +501,10 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const PrayerTimeSettingScreen()),
-              );
+              ).then((_) {
+                // Refresh the time table preference when returning from settings
+                _loadTimeTablePreference();
+              });
             },
           ),
           ListTile(
