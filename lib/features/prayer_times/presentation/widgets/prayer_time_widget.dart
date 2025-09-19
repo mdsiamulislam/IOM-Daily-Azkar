@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adhan/adhan.dart';
+import 'package:iomdailyazkar/core/constants/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/city_data.dart';
@@ -241,7 +242,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     final double headerFontSize = isSmallScreen ? 11.0 : isMediumScreen ? 13.0 : 14.0;
     final double timerFontSize = isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
     final double prayerNameFontSize = isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
-    final double prayerTimeFontSize = isSmallScreen ? 10.0 : isMediumScreen ? 13.0 : 14.0;
+    final double prayerTimeFontSize = isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
 
     if (prayerTimes == null) {
       // show loading while prayerTimes are being calculated
@@ -272,10 +273,9 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
         maxWidth: screenWidth * 0.95,
         minWidth: 300,
       ),
-      margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.0 : 8.0),
       padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
-        color: const Color(0xFF2e7d32),
+        color: AppColors.primaryGreen,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
