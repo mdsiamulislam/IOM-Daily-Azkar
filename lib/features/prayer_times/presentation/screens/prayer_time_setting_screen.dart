@@ -85,6 +85,42 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "নিম্নোক্ত শহরগুলোর জন্য ডিফল্ট নামাজের সময় ব্যবহৃত হবে।",
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  value: _selectedCity.value,
+                  decoration: InputDecoration(
+                    labelText: "নামাযের সময়ের জন্য শহর নির্বাচন করুন",
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  items: CityCoordinates.cityMap.keys.map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city,
+                      child: Text(city, style: const TextStyle(fontSize: 16)),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    _selectedCity.value = value!;
+                    UserPref().setUserCurrentCity(value);
+                  },
+                ),
+                Divider(),
+                SizedBox(height: 20),
+              ],
+            ),
+
             // Radio buttons
             Obx(() {
               return Column(
@@ -127,7 +163,9 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
             // Time Table Widget
             Obx(() {
               return _selectedOption.value == TimeTableOption.dual
-                  ? const PrayerTimeWidget()
+                  ?  PrayerTimeWidget(
+                city:'Dhaka',
+              )
                   : const CombinedPrayerTimesWidget();
             }),
 
@@ -138,24 +176,7 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
               if (_selectedOption.value == TimeTableOption.dual) {
                 return Column(
                   children: [
-                    DropdownButtonFormField<String>(
-                      value: _selectedCity.value,
-                      decoration: InputDecoration(
-                        labelText: "নামাযের সময়ের জন্য শহর নির্বাচন করুন",
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                      items: CityCoordinates.cityMap.keys.map((city) {
-                        return DropdownMenuItem<String>(
-                          value: city,
-                          child: Text(city, style: const TextStyle(fontSize: 16)),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        _selectedCity.value = value!;
-                        UserPref().setUserCurrentCity(value);
-                      },
-                    ),
+
 
                     const SizedBox(height: 16),
 

@@ -4,16 +4,9 @@ import java.io.FileInputStream
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Load keystore properties
-val keystoreProperties = Properties()
-val keystorePropertiesFile = rootProject.file("key.properties")
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-}
 
 android {
     namespace = "com.proappsbuild.iomdailyazkar"
@@ -38,18 +31,19 @@ android {
         versionName = flutter.versionName
     }
 
-    signingConfigs {
-        create("release") {
-            keyAlias = "my_key_alias"
-            keyPassword = "121212"
-            storeFile = file("my-release-key.jks")
-            storePassword = "121212"
-        }
-    }
+//    signingConfigs {
+//        create("release") {
+//            keyAlias = "my_key_alias"
+//            keyPassword = "121212"
+//            storeFile = file("my-release-key.jks")
+//            storePassword = "121212"
+//        }
+//    }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+//          signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }

@@ -38,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
   List<dynamic> ads = [];
   bool isLoading = true;
   int randomIndex = 0;
+  String userCity = "";
 
   // Add ScrollController for better control
   ScrollController? _scrollController;
@@ -58,7 +59,17 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
     _scrollController = ScrollController();
     loadDataFromDevice();
     _loadTimeTablePreference();
+    _updateCity();
   }
+
+  void _updateCity(){
+    UserPref().getUserCurrentCity().then((city) {
+      setState(() {
+        userCity = city;
+      });
+    });
+  }
+
 
   // Load the time table preference from SharedPreferences
   Future<void> _loadTimeTablePreference() async {
@@ -368,6 +379,7 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                     // Prayer Times Widget - Now using Obx to listen to reactive changes
                     Obx(() => DualTimeCard(
                       isSingleTimeTable: _changeWidget.isSingleTimeTable.value,
+                      city: userCity,
                     )),
                     const SizedBox(height: 16),
                     // Hadith Card

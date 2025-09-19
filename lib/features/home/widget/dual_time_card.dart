@@ -8,13 +8,18 @@ import '../../../core/local_storage/local_prayer_time.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 class DualTimeCard extends StatelessWidget {
   bool isSingleTimeTable;
-  DualTimeCard({super.key, required this.isSingleTimeTable});
+  String city;
+  DualTimeCard({super.key, required this.isSingleTimeTable, required this.city});
 
   @override
   Widget build(BuildContext context) {
     return isSingleTimeTable
-          ? CombinedPrayerTimesWidget()
-          : PrayerTimeWidget();
+          ? CombinedPrayerTimesWidget(
+      city: city,
+    )
+          : PrayerTimeWidget(
+              city: city,
+    );
   }
 }
 
@@ -24,7 +29,11 @@ class DualTimeCard extends StatelessWidget {
 
 
 class PrayerTimeWidget extends StatefulWidget {
-  const PrayerTimeWidget({super.key});
+  String city;
+  PrayerTimeWidget({
+    required this.city,
+    super.key
+  });
 
   @override
   State<PrayerTimeWidget> createState() => _PrayerTimeWidgetState();
@@ -32,15 +41,12 @@ class PrayerTimeWidget extends StatefulWidget {
 
 class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
   Map<String, String?> savedTimes = {};
-  String currentCity = "ঢাকা";
-  Coordinates cordinates = Coordinates(23.8103, 90.4125);
 
 
   @override
   void initState() {
     super.initState();
     _loadSavedTimes();
-    _getCurrentCityPrayerTimes();
   }
 
   Future<void> _loadSavedTimes() async {
@@ -50,24 +56,13 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
     });
   }
 
-  Future<void> _getCurrentCityPrayerTimes() async {
-    String city = await UserPref().getUserCurrentCity();
-    final coordinates = CityCoordinates.cityMap[city] ?? Coordinates(23.8103, 90.4125);
-    String cityName = CityNamesBN.cityNamesBN[city] ?? "ঢাকা";
-    
-    print("Current City: $city, Coordinates: ${coordinates.latitude}, ${coordinates.longitude}");
-
-    setState(() {
-      currentCity = cityName;
-      cordinates = coordinates;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final coordinates = CityCoordinates.cityMap[widget.city] ?? Coordinates(23.8103, 90.4125);
     final params = CalculationMethod.kuwait.getParameters();
     params.madhab = Madhab.hanafi;
-    final prayerTimes = PrayerTimes.today(cordinates, params);
+    final prayerTimes = PrayerTimes.today(coordinates, params);
 
     String _convertToBangla(String input) {
       const english = ['0','1','2','3','4','5','6','7','8','9','AM','PM'];
@@ -106,7 +101,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "$currentCity এর নামাজের সময়",
+                        "${CityNamesBN.cityNamesBN[widget.city] ?? "ঢাকা"} এর নামাজের সময়",
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
