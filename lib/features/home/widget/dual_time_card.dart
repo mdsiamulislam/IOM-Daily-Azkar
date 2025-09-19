@@ -61,7 +61,6 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
       currentCity = cityName;
       cordinates = coordinates;
     });
-
   }
 
   @override

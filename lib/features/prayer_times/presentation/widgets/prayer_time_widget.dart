@@ -4,6 +4,7 @@ import 'package:adhan/adhan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/city_data.dart';
+import '../../../../core/local_storage/user_pref.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../screens/forbidden_prayer_times_page.dart';
 
@@ -11,29 +12,25 @@ class CombinedPrayerTimesWidget extends StatefulWidget {
   const CombinedPrayerTimesWidget({super.key});
 
   @override
-  State<CombinedPrayerTimesWidget> createState() => _CombinedPrayerTimesWidgetState();
+  State<CombinedPrayerTimesWidget> createState() =>
+      _CombinedPrayerTimesWidgetState();
 }
 
 class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
+  // Display name (Bangla) is derived from selectedCityKey via CityNamesBN
+  String currentCityDisplay = "ঢাকা";
+
+  // internal key matching CityCoordinates.cityMap keys
+  String selectedCityKey = 'Dhaka';
+
+  // coordinates actually used for calculations
+  Coordinates selectedCoordinates = Coordinates(23.8103, 90.4125);
+
   PrayerTimes? prayerTimes;
   Timer? _timer;
   Duration remainingTime = Duration.zero;
   String currentPrayerName = '';
   String nextPrayerName = '';
-  Coordinates? selectedCoordinates;
-  String selectedCity = 'Dhaka'; // Default city
-
-  // Save selected city locally
-  Future<void> _saveSelectedCity(String city) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedCity', city);
-  }
-
-  // get the saved city from local storage
-  Future<String> _getSavedCity() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('selectedCity') ?? 'Dhaka'; // Default to Dhaka if nothing saved
-  }
 
   final Map<String, String> prayerLabels = {
     'fajr': 'ফজর',
@@ -51,21 +48,19 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     int hour = time.hour;
     int minute = time.minute;
     String amPm = '';
-
     if (hour >= 12) {
       amPm = 'PM';
     } else {
       amPm = 'AM';
     }
-
     if (hour > 12) {
-      hour -= 12;
+      hour = hour - 12;
     }
     if (hour == 0) {
       hour = 12; // 00:xx -> 12:xx AM
     }
-
-    String formatted = '${_toBanglaDigit(hour)}:${_toBanglaDigit(minute.toString().padLeft(2, '0'))} $amPm';
+    String formatted =
+        '${_toBanglaDigit(hour)}:${_toBanglaDigit(minute.toString().padLeft(2, '0'))} $amPm';
     return formatted;
   }
 
@@ -83,11 +78,9 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     int hours = duration.inHours;
     int minutes = duration.inMinutes.remainder(60);
     int seconds = duration.inSeconds.remainder(60);
-
     String hoursStr = hours > 0 ? '${_toBanglaDigit(hours)} ঘণ্টা ' : '';
     String minutesStr = minutes > 0 ? '${_toBanglaDigit(minutes)} মিনিট ' : '';
     String secondsStr = '${_toBanglaDigit(seconds)} সেকেন্ড';
-
     return '$hoursStr$minutesStr$secondsStr'.trim();
   }
 
@@ -97,23 +90,49 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
   }
 
   bool _isMediumScreen(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 360 && MediaQuery.of(context).size.width < 600;
+    return MediaQuery.of(context).size.width >= 360 &&
+        MediaQuery.of(context).size.width < 600;
   }
 
   // --- Lifecycle Methods ---
   @override
   void initState() {
     super.initState();
-    _loadSelectedCity(); // Load city when the widget initializes
     _startTimer();
-    // get the saved city from local storage
-    _getSavedCity().then((city) {
-      setState(() {
-        selectedCity = city;
-        selectedCoordinates = CityCoordinates.cityMap[selectedCity];
-        calculatePrayerTimes();
-      });
-    });
+    _loadSavedCityAndInit();
+  }
+
+  Future<void> _loadSavedCityAndInit() async {
+    // Try to get from your UserPref helper; if it returns a key in CityCoordinates use it.
+    String? saved = await UserPref().getUserCurrentCity(); // may return key or name
+    String keyToUse = 'Dhaka';
+
+    if (saved != null && saved.isNotEmpty) {
+      // if saved matches a key in city map, use it
+      if (CityCoordinates.cityMap.containsKey(saved)) {
+        keyToUse = saved;
+      } else {
+        // maybe saved is display name (Bangla) — try to find matching key
+        final foundKey = CityNamesBN.cityNamesBN.entries
+            .firstWhere(
+                (e) => e.value == saved, orElse: () => const MapEntry('', ''))
+            .key;
+        if (foundKey.isNotEmpty && CityCoordinates.cityMap.containsKey(foundKey)) {
+          keyToUse = foundKey;
+        }
+      }
+    }
+
+    // ensure fallback exists
+    selectedCityKey = keyToUse;
+    selectedCoordinates =
+        CityCoordinates.cityMap[selectedCityKey] ?? selectedCoordinates;
+    currentCityDisplay =
+        CityNamesBN.cityNamesBN[selectedCityKey] ?? currentCityDisplay;
+
+    // calculate prayer times for selected city
+    calculatePrayerTimes();
+    setState(() {});
   }
 
   @override
@@ -122,34 +141,26 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     super.dispose();
   }
 
-  // --- SharedPreferences Methods ---
-  Future<void> _loadSelectedCity() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      selectedCity = prefs.getString('selectedCity') ?? 'Dhaka'; // Default to Dhaka if nothing saved
-      selectedCoordinates = CityCoordinates.cityMap[selectedCity];
-      calculatePrayerTimes();
-    });
-  }
-
   // --- Calculate Prayer Times ---
   void calculatePrayerTimes() {
     if (selectedCoordinates == null) return;
-
     final today = DateComponents.from(DateTime.now());
     final params = CalculationMethod.muslim_world_league.getParameters();
     params.madhab = Madhab.hanafi;
 
-    setState(() {
-      prayerTimes = PrayerTimes(selectedCoordinates!, today, params);
+    try {
+      prayerTimes = PrayerTimes(selectedCoordinates, today, params);
       _updatePrayerTimesInfo();
-    });
+      setState(() {});
+    } catch (e) {
+      // handle rare errors gracefully
+      debugPrint('Error calculating prayer times: $e');
+    }
   }
 
   // --- Update Current and Next Prayer Time ---
   void _updatePrayerTimesInfo() {
     if (prayerTimes == null) return;
-
     final now = DateTime.now();
     final adhanNextPrayer = prayerTimes!.nextPrayer();
     final adhanCurrentPrayer = prayerTimes!.currentPrayer();
@@ -161,13 +172,18 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     if (adhanNextPrayer == Prayer.none) {
       // If all prayers for today are over, show Fajr for tomorrow
       final tomorrow = DateComponents.from(now.add(const Duration(days: 1)));
-      final tomorrowPrayerTimes = PrayerTimes(selectedCoordinates!, tomorrow, CalculationMethod.muslim_world_league.getParameters());
+      final params = CalculationMethod.muslim_world_league.getParameters();
+      params.madhab = Madhab.hanafi;
+      final tomorrowPrayerTimes =
+      PrayerTimes(selectedCoordinates, tomorrow, params);
       newNextPrayerName = prayerLabels['fajr']!;
       newRemainingTime = tomorrowPrayerTimes.fajr.difference(now);
-      newCurrentPrayerName = prayerLabels['isha']!; // Assume Isha is the current prayer if all are done for today
+      newCurrentPrayerName = prayerLabels['isha']!;
     } else {
-      newNextPrayerName = prayerLabels[adhanNextPrayer.name.toLowerCase()] ?? '';
-      newCurrentPrayerName = prayerLabels[adhanCurrentPrayer.name.toLowerCase()] ?? '';
+      newNextPrayerName =
+          prayerLabels[adhanNextPrayer.name.toLowerCase()] ?? '';
+      newCurrentPrayerName =
+          prayerLabels[adhanCurrentPrayer.name.toLowerCase()] ?? '';
 
       DateTime nextPrayerTime;
       switch (adhanNextPrayer) {
@@ -190,7 +206,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
           nextPrayerTime = prayerTimes!.isha;
           break;
         default:
-          nextPrayerTime = now; // Fallback
+          nextPrayerTime = now;
       }
       newRemainingTime = nextPrayerTime.difference(now);
     }
@@ -208,6 +224,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      // update remaining time and progress if prayerTimes exists
       _updatePrayerTimesInfo();
     });
   }
@@ -227,12 +244,19 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     final double prayerTimeFontSize = isSmallScreen ? 10.0 : isMediumScreen ? 13.0 : 14.0;
 
     if (prayerTimes == null) {
+      // show loading while prayerTimes are being calculated
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
-    final tomorrowFajr = prayerTimes!.fajr.add(const Duration(days: 1));
-
     // Prepare the list of prayer data for the GridView
+    final tomorrowFajr = (() {
+      // safer way: compute tomorrow prayerTimes.fajr
+      final tomorrow = DateComponents.from(DateTime.now().add(const Duration(days: 1)));
+      final params = CalculationMethod.muslim_world_league.getParameters()..madhab = Madhab.hanafi;
+      final tomorrowPrayerTimes = PrayerTimes(selectedCoordinates, tomorrow, params);
+      return tomorrowPrayerTimes.fajr;
+    })();
+
     final List<Map<String, dynamic>> prayers = [
       {'name': prayerLabels['fajr']!, 'start': prayerTimes!.fajr, 'end': prayerTimes!.sunrise},
       {'name': prayerLabels['sunrise']!, 'start': prayerTimes!.sunrise, 'end': prayerTimes!.dhuhr},
@@ -245,13 +269,13 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(
-        maxWidth: screenWidth * 0.95, // Ensure it doesn't exceed 95% of screen width
-        minWidth: 300, // Minimum width for very small screens
+        maxWidth: screenWidth * 0.95,
+        minWidth: 300,
       ),
       margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 4.0 : 8.0),
       padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
-        color: const Color(0xFF2e7d32), // Dark green background
+        color: const Color(0xFF2e7d32),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -270,32 +294,33 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
             children: [
               Icon(Icons.location_on, color: Colors.white70, size: iconSize),
               SizedBox(width: isSmallScreen ? 6 : 10),
-              Expanded( // Changed from Flexible to Expanded for better space utilization
+              Expanded(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
-                    value: selectedCity,
+                    value: selectedCityKey,
                     dropdownColor: const Color(0xFF1b5e20),
                     style: AppTextStyles.regular.copyWith(
                       color: Colors.white,
                       fontSize: headerFontSize,
                     ),
                     icon: Icon(Icons.arrow_drop_down, color: Colors.white70, size: iconSize + 2),
-                    isExpanded: true, // Make dropdown take full available width
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
+                    isExpanded: true,
+                    onChanged: (String? newKey) {
+                      if (newKey != null && newKey != selectedCityKey) {
                         setState(() {
-                          selectedCity = newValue;
-                          selectedCoordinates = CityCoordinates.cityMap[selectedCity];
-                          calculatePrayerTimes();
-                          _saveSelectedCity(newValue);
+                          selectedCityKey = newKey;
+                          selectedCoordinates = CityCoordinates.cityMap[selectedCityKey] ?? selectedCoordinates;
+                          currentCityDisplay = CityNamesBN.cityNamesBN[selectedCityKey] ?? currentCityDisplay;
                         });
+                        calculatePrayerTimes();
                       }
                     },
-                    items: CityCoordinates.cityMap.keys.map<DropdownMenuItem<String>>((String city) {
+                    items: CityCoordinates.cityMap.keys.map<DropdownMenuItem<String>>((String cityKey) {
+                      final display = CityNamesBN.cityNamesBN[cityKey] ?? cityKey;
                       return DropdownMenuItem<String>(
-                        value: city,
+                        value: cityKey,
                         child: Text(
-                          city,
+                          display,
                           style: AppTextStyles.regular.copyWith(
                             color: Colors.white,
                             fontSize: headerFontSize,
@@ -319,20 +344,19 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                   showDialog(
                     context: context,
                     builder: (BuildContext context) {
-                      return ForbiddenPrayerTimesPage();
+                      return const ForbiddenPrayerTimesPage();
                     },
                   );
                 },
               ),
             ],
           ),
+
           // Main Display for Current/Next Prayer (responsive)
           Column(
             children: [
               Text(
-                (remainingTime.isNegative)
-                    ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
-                    : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
+                (remainingTime.isNegative) ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন' : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
                 style: AppTextStyles.regular.copyWith(
                   fontSize: headerFontSize,
                   color: Colors.white70,
@@ -355,11 +379,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
             ],
           ),
 
-          Divider(
-            color: Colors.white54,
-            height: isSmallScreen ? 16 : 20,
-            thickness: 1,
-          ),
+          Divider(color: Colors.white54, height: isSmallScreen ? 16 : 20, thickness: 1),
 
           // Flexible Grid - 2 columns minimum, height adjusts to content
           LayoutBuilder(
@@ -368,7 +388,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               double crossAxisSpacing = isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
               double mainAxisSpacing = isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
 
-              // Calculate each prayer card
               return Wrap(
                 spacing: crossAxisSpacing,
                 runSpacing: mainAxisSpacing,
@@ -381,12 +400,15 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
                   // Progress Bar Calculation
                   double progress = 0.0;
-                  if (start.isBefore(DateTime.now()) && DateTime.now().isBefore(end)) {
+                  final now = DateTime.now();
+                  if (start.isBefore(now) && now.isBefore(end)) {
                     final totalDuration = end.difference(start).inSeconds;
-                    final passedDuration = DateTime.now().difference(start).inSeconds;
+                    final passedDuration = now.difference(start).inSeconds;
                     progress = totalDuration > 0 ? passedDuration / totalDuration : 0.0;
-                  } else if (DateTime.now().isAfter(end)) {
+                  } else if (now.isAfter(end)) {
                     progress = 1.0;
+                  } else {
+                    progress = 0.0;
                   }
 
                   // Calculate width for each item (2 per row)
@@ -394,16 +416,12 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
                   return SizedBox(
                     width: itemWidth,
-                    child: IntrinsicHeight( // This ensures the container takes only the height it needs
+                    child: IntrinsicHeight(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.white.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.1),
+                          color: isActive ? Colors.white.withOpacity(0.25) : Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(isSmallScreen ? 8 : 12),
-                          border: isActive
-                              ? Border.all(color: Colors.white, width: isSmallScreen ? 1.5 : 2)
-                              : null,
+                          border: isActive ? Border.all(color: Colors.white, width: isSmallScreen ? 1.5 : 2) : null,
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
@@ -421,7 +439,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                               ),
-
                               SizedBox(height: isSmallScreen ? 2 : 4),
 
                               // Prayer times
@@ -431,19 +448,20 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                                   fontSize: prayerTimeFontSize,
                                   color: Colors.white70,
                                 ),
-                                maxLines: 2, // Allow 2 lines for time if needed
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
-
                               SizedBox(height: isSmallScreen ? 4 : 6),
 
                               // Progress bar
-                              LinearProgressIndicator(
-                                value: progress,
-                                backgroundColor: Colors.white.withOpacity(0.3),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightGreenAccent),
+                              ClipRRect(
                                 borderRadius: BorderRadius.circular(isSmallScreen ? 3 : 5),
-                                minHeight: isSmallScreen ? 3 : 4,
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  backgroundColor: Colors.white.withOpacity(0.3),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightGreenAccent),
+                                  minHeight: isSmallScreen ? 3 : 4,
+                                ),
                               ),
                             ],
                           ),

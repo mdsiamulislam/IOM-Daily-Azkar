@@ -153,8 +153,7 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
                       }).toList(),
                       onChanged: (value) {
                         _selectedCity.value = value!;
-                        final coordinates = CityCoordinates.cityMap[value]!;
-                        print('Selected city: $value, Coordinates: ${coordinates.latitude}, ${coordinates.longitude}');
+                        UserPref().setUserCurrentCity(value);
                       },
                     ),
 
