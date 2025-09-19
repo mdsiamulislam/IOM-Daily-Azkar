@@ -20,9 +20,6 @@ class IFatwaListScreen extends StatefulWidget {
 }
 
 class _IFatwaListScreenState extends State<IFatwaListScreen> {
-  // API configuration
-  static const String _apiHost = 'a43fb2279a2dcb627542879ce0cb7fa11205888381429322f2f128b03d2c8220';
-  static const String _searchApiHost = 'https://search.ifatwa.info/search';
 
   List<dynamic> _allFatwas = [];
   List<dynamic> _displayedFatwas = [];
@@ -100,7 +97,6 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
     if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
       if (!_isLoading && _hasMoreData) {
         if (_isSearchMode && _searchController.text.trim().isNotEmpty) {
-          _searchApiData(_searchController.text.trim(), loadMore: true);
         } else {
           _loadApiData(loadMore: true);
         }
@@ -126,7 +122,7 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
         Uri.parse('https://search.ifatwa.info/indexes/posts/search'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization' : 'Bearer a43fb2279a2dcb627542879ce0cb7fa11205888381429322f2f128b03d2c8220'
+          'Authorization' : 'Bearer bdbad192801a4f64141931602d982d78139a4d1f5c1ff686fb4741d7f65a31cd'
         },
       );
 
@@ -178,65 +174,6 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
     }
   }
 
-  Future<void> _searchApiData(String query, {bool loadMore = false}) async {
-    if (_isLoading || query.trim().isEmpty) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      final offset = loadMore ? _displayedFatwas.length : 0;
-      final queryParams = {
-        'q': query.trim(),
-        'limit': _limit.toString(),
-        'offset': offset.toString(),
-        if (_selectedTag != null && _selectedTag != 'All')
-          'tags': _selectedTag!,
-      };
-
-      final uri = Uri.parse(_searchApiHost).replace(queryParameters: queryParams);
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List<dynamic> hits = data['hits'] ?? [];
-
-        setState(() {
-          if (loadMore) {
-            _displayedFatwas.addAll(hits);
-          } else {
-            _displayedFatwas = hits;
-            _currentPage = 0;
-          }
-
-          _hasMoreData = hits.length == _limit;
-          _isSearchMode = true;
-          _lastSearchQuery = query.trim();
-          _isLoading = false;
-        });
-
-        _updateTagsFromResults(hits);
-      } else {
-        throw Exception('Search failed: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('API search error: $e');
-      setState(() => _isLoading = false);
-
-      // Fallback to local search
-      if (!loadMore) {
-        _searchLocal(query);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('অনুসন্ধানে সমস্যা হয়েছে। স্থানীয় অনুসন্ধান ব্যবহার করা হচ্ছে।')),
-      );
-    }
-  }
 
   void _updateTagsFromResults(List<dynamic> results) {
     for (var result in results) {
@@ -327,7 +264,7 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
       // Debounce search
       Future.delayed(Duration(milliseconds: 500), () {
         if (_searchController.text.trim() == query && query.isNotEmpty) {
-          _searchApiData(query);
+          // _searchApiData(query);
         }
       });
     }
