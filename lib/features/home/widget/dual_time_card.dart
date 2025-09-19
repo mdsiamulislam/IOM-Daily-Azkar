@@ -1,5 +1,9 @@
+import 'package:adhan/adhan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:iomdailyazkar/core/local_storage/user_pref.dart';
+import '../../../core/constants/city_data.dart';
 import '../../../core/local_storage/local_prayer_time.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 class DualTimeCard extends StatelessWidget {
@@ -28,11 +32,15 @@ class PrayerTimeWidget extends StatefulWidget {
 
 class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
   Map<String, String?> savedTimes = {};
+  String currentCity = "ঢাকা";
+  Coordinates cordinates = Coordinates(23.8103, 90.4125);
+
 
   @override
   void initState() {
     super.initState();
     _loadSavedTimes();
+    _getCurrentCityPrayerTimes();
   }
 
   Future<void> _loadSavedTimes() async {
@@ -42,14 +50,52 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
     });
   }
 
+  Future<void> _getCurrentCityPrayerTimes() async {
+    String city = await UserPref().getUserCurrentCity();
+    final coordinates = CityCoordinates.cityMap[city] ?? Coordinates(23.8103, 90.4125);
+    String cityName = CityNamesBN.cityNamesBN[city] ?? "ঢাকা";
+    
+    print("Current City: $city, Coordinates: ${coordinates.latitude}, ${coordinates.longitude}");
+
+    setState(() {
+      currentCity = cityName;
+      cordinates = coordinates;
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
+    final params = CalculationMethod.kuwait.getParameters();
+    params.madhab = Madhab.hanafi;
+    final prayerTimes = PrayerTimes.today(cordinates, params);
+
+    String _convertToBangla(String input) {
+      const english = ['0','1','2','3','4','5','6','7','8','9','AM','PM'];
+      const bangla = ['০','১','২','৩','৪','৫','৬','৭','৮','৯','এএম','পিএম'];
+      for (int i = 0; i < english.length; i++) {
+        input = input.replaceAll(english[i], bangla[i]);
+      }
+      return input;
+    }
+
+
+   final prayerTimesBangla = [
+     _convertToBangla(DateFormat.jm().format(prayerTimes.fajr)),
+     _convertToBangla(DateFormat.jm().format(prayerTimes.sunrise)),
+     _convertToBangla(DateFormat.jm().format(prayerTimes.dhuhr)),
+     _convertToBangla(DateFormat.jm().format(prayerTimes.asr)),
+     _convertToBangla(DateFormat.jm().format(prayerTimes.maghrib)),
+     _convertToBangla(DateFormat.jm().format(prayerTimes.isha)),
+   ];
+
     return Column(
       children: [
         Row(
           children: [
             // বাম পাশ (শহরের নামাজের সময়)
             Expanded(
+              flex: 4,
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -60,20 +106,20 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "আপনার শহরের নামাজের সময়",
-                        style: TextStyle(
+                      Text(
+                        "$currentCity এর নামাজের সময়",
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                           color: Colors.green,
                         ),
                       ),
                       const Divider(),
-                      _buildPrayerRow("ফজর", "৪:৩০ AM - ৫:০০ AM"),
-                      _buildPrayerRow("যোহর", "১২:৪৫ PM - ১:৩০ PM"),
-                      _buildPrayerRow("আসর", "৪:১৫ PM - ৪:৪৫ PM"),
-                      _buildPrayerRow("মাগরিব", "৬:৩০ PM - ৬:৫০ PM"),
-                      _buildPrayerRow("ইশা", "৮:০০ PM - ৮:৩০ PM"),
+                      _buildPrayerRow("ফজর", prayerTimesBangla[0] + " - " + prayerTimesBangla[1]),
+                      _buildPrayerRow("যোহর", prayerTimesBangla[2] + " - " + prayerTimesBangla[3]),
+                      _buildPrayerRow("আসর", prayerTimesBangla[3] + " - " + prayerTimesBangla[4]),
+                      _buildPrayerRow("মাগরিব", prayerTimesBangla[4] + " - " + prayerTimesBangla[5]),
+                      _buildPrayerRow("ইশা", prayerTimesBangla[5] + " - " + prayerTimesBangla[0]),
                     ],
                   ),
                 ),
@@ -84,6 +130,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
 
             // ডান পাশ (সেভ করা স্থানীয় মসজিদের জামাতের সময়)
             Expanded(
+              flex: 3,
               child: Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -97,7 +144,7 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
                       Text(
                         savedTimes['masqueName'] ?? "স্থানীয় মসজিদের জামাতের সময়",
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: Colors.green,
                         ),
