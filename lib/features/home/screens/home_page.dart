@@ -15,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/constants.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../core/controllers/location_controller.dart';
 import '../../about/presentation/screens/about_app_screen.dart';
 import '../../about/presentation/screens/our_apps_screen.dart';
 import '../../dua/presentation/screens/dua_list_screen.dart';
@@ -29,6 +30,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMixin {
+
+  final locationController = Get.find<LocationController>();
+
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
@@ -379,8 +383,8 @@ class _HomeScreenState extends State<HomeScreen> with AutomaticKeepAliveClientMi
                     // Prayer Times Widget - Now using Obx to listen to reactive changes
                     Obx(() => DualTimeCard(
                       isSingleTimeTable: _changeWidget.isSingleTimeTable.value,
-                      city: userCity,
-                    )),
+                      city: locationController.city.value,
+                    ))  ,
                     const SizedBox(height: 16),
                     // Hadith Card
                     isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),

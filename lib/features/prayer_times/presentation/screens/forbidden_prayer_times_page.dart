@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:iomdailyazkar/core/constants/constants.dart';
-        // Assuming AppTextStyles is available from this path
         import 'package:iomdailyazkar/core/theme/app_text_styles.dart';
 
         class ForbiddenPrayerTimesPage extends StatelessWidget {

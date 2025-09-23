@@ -5,9 +5,10 @@ import 'package:iomdailyazkar/core/constants/constants.dart';
 import '../../../../core/constants/city_data.dart';
 import '../../../../core/local_storage/local_prayer_time.dart';
 import '../../../../core/local_storage/user_pref.dart';
+import '../../../home/controllers/location_controller.dart';
 import '../../../home/widget/dual_time_card.dart';
 import '../../controllers/change_widget.dart';
-import '../widgets/prayer_time_widget.dart';
+import '../widgets/prayer_time_widget.dart' hide LocationController;
 
 enum TimeTableOption { single, dual }
 
@@ -111,10 +112,15 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
                       child: Text(city, style: const TextStyle(fontSize: 16)),
                     );
                   }).toList(),
-                  onChanged: (value) {
-                    _selectedCity.value = value!;
-                    UserPref().setUserCurrentCity(value);
-                  },
+                    onChanged: (value) {
+                      if (value != null) {
+                        // save in prefs
+                        UserPref().setUserCurrentCity(value);
+                        // update reactive controller
+                        final locationController = Get.find<LocationController>();
+                        locationController.setCity(value);
+                      }
+                    },
                 ),
                 Divider(),
                 SizedBox(height: 20),
@@ -166,7 +172,9 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
                   ?  PrayerTimeWidget(
                 city:'Dhaka',
               )
-                  : const CombinedPrayerTimesWidget();
+                  : CombinedPrayerTimesWidget(
+                city: 'Dhaka',
+              );
             }),
 
             const SizedBox(height: 20),

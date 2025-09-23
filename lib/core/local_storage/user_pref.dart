@@ -20,7 +20,7 @@ class UserPref{
   }
   Future<String> getUserCurrentCity() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('userCurrentCity') ?? "Medina";
+    return prefs.getString('userCurrentCity') ?? "Dhaka";
   }
 
 }

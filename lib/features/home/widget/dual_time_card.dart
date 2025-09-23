@@ -2,9 +2,7 @@ import 'package:adhan/adhan.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:iomdailyazkar/core/local_storage/user_pref.dart';
 import '../../../core/constants/city_data.dart';
-import '../../../core/local_storage/local_prayer_time.dart';
 import '../../prayer_times/presentation/widgets/prayer_time_widget.dart';
 class DualTimeCard extends StatelessWidget {
   bool isSingleTimeTable;
@@ -43,18 +41,6 @@ class _PrayerTimeWidgetState extends State<PrayerTimeWidget> {
   Map<String, String?> savedTimes = {};
 
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedTimes();
-  }
-
-  Future<void> _loadSavedTimes() async {
-    final data = await LocalPrayerTime().getPrayerTime();
-    setState(() {
-      savedTimes = data;
-    });
-  }
 
 
   @override

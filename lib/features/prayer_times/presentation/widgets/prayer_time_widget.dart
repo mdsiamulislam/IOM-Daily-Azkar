@@ -9,9 +9,9 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../screens/forbidden_prayer_times_page.dart';
 
 class CombinedPrayerTimesWidget extends StatefulWidget {
-  final String? city; // City from previous screen
+  final String city; // city key (like "Dhaka")
 
-  const CombinedPrayerTimesWidget({super.key, this.city});
+  const CombinedPrayerTimesWidget({super.key, required this.city});
 
   @override
   State<CombinedPrayerTimesWidget> createState() =>
@@ -50,53 +50,39 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
   Future<void> _initCityAndPrayerTimes() async {
     String keyToUse = 'Dhaka';
 
-    // 1. Priority: City from previous screen
-    if (widget.city != null && widget.city!.isNotEmpty) {
-      if (CityCoordinates.cityMap.containsKey(widget.city)) {
-        keyToUse = widget.city!;
-      } else {
-        final foundKey = CityNamesBN.cityNamesBN.entries
-            .firstWhere(
-              (e) => e.value == widget.city,
-          orElse: () => const MapEntry('', ''),
-        )
-            .key;
-        if (foundKey.isNotEmpty &&
-            CityCoordinates.cityMap.containsKey(foundKey)) {
-          keyToUse = foundKey;
-        }
-      }
+    // 1. Use the city passed from previous screen (widget.city)
+    if (CityCoordinates.cityMap.containsKey(widget.city)) {
+      keyToUse = widget.city;
     } else {
-      // 2. Check UserPref
-      String? saved = await UserPref().getUserCurrentCity();
-      if (saved != null && saved.isNotEmpty) {
-        if (CityCoordinates.cityMap.containsKey(saved)) {
-          keyToUse = saved;
-        } else {
-          final foundKey = CityNamesBN.cityNamesBN.entries
-              .firstWhere(
-                (e) => e.value == saved,
-            orElse: () => const MapEntry('', ''),
-          )
-              .key;
-          if (foundKey.isNotEmpty &&
-              CityCoordinates.cityMap.containsKey(foundKey)) {
-            keyToUse = foundKey;
+      // 2. Fallback → check if it's a Bangla city name and map it back
+      final foundKey = CityNamesBN.cityNamesBN.entries
+          .firstWhere(
+            (e) => e.value == widget.city,
+        orElse: () => const MapEntry('', ''),
+      )
+          .key;
+      if (foundKey.isNotEmpty &&
+          CityCoordinates.cityMap.containsKey(foundKey)) {
+        keyToUse = foundKey;
+      } else {
+        // 3. Fallback → load last saved city from UserPref
+        final saved = await UserPref().getUserCurrentCity();
+        if (saved.isNotEmpty) {
+          if (CityCoordinates.cityMap.containsKey(saved)) {
+            keyToUse = saved;
           }
         }
       }
     }
 
-    // Apply
+    // Apply city
     selectedCityKey = keyToUse;
     selectedCoordinates =
         CityCoordinates.cityMap[selectedCityKey] ?? selectedCoordinates;
     currentCityDisplay =
         CityNamesBN.cityNamesBN[selectedCityKey] ?? currentCityDisplay;
 
-    // Optionally save to UserPref
-    UserPref().setUserCurrentCity(selectedCityKey);
-
+    // ✅ Do NOT overwrite UserPref here — only read from it
     calculatePrayerTimes();
     setState(() {});
   }
@@ -144,7 +130,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
   }
 
   void calculatePrayerTimes() {
-    if (selectedCoordinates == null) return;
     final today = DateComponents.from(DateTime.now());
     final params = CalculationMethod.muslim_world_league.getParameters();
     params.madhab = Madhab.hanafi;
@@ -234,27 +219,14 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
     final double containerPadding =
     isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
-    final double iconSize = isSmallScreen ? 14.0 : 16.0;
-    final double headerFontSize = isSmallScreen
-        ? 11.0
-        : isMediumScreen
-        ? 13.0
-        : 14.0;
-    final double timerFontSize = isSmallScreen
-        ? 14.0
-        : isMediumScreen
-        ? 16.0
-        : 18.0;
-    final double prayerNameFontSize = isSmallScreen
-        ? 12.0
-        : isMediumScreen
-        ? 14.0
-        : 15.0;
-    final double prayerTimeFontSize = isSmallScreen
-        ? 12.0
-        : isMediumScreen
-        ? 14.0
-        : 15.0;
+    final double headerFontSize =
+    isSmallScreen ? 11.0 : isMediumScreen ? 13.0 : 14.0;
+    final double timerFontSize =
+    isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
+    final double prayerNameFontSize =
+    isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
+    final double prayerTimeFontSize =
+    isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
 
     if (prayerTimes == null) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
@@ -265,7 +237,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
       DateComponents.from(DateTime.now().add(const Duration(days: 1)));
       final params = CalculationMethod.muslim_world_league.getParameters()
         ..madhab = Madhab.hanafi;
-      final tomorrowPrayerTimes = PrayerTimes(selectedCoordinates, tomorrow, params);
+      final tomorrowPrayerTimes =
+      PrayerTimes(selectedCoordinates, tomorrow, params);
       return tomorrowPrayerTimes.fajr;
     })();
 
@@ -315,7 +288,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                 overflow: TextOverflow.ellipsis,
               ),
               SizedBox(height: isSmallScreen ? 4 : 8),
-
               Text(
                 formatBanglaDuration(remainingTime),
                 style: AppTextStyles.bold.copyWith(
@@ -333,12 +305,12 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ForbiddenPrayerTimesPage(),
+                  builder: (context) => const ForbiddenPrayerTimesPage(),
                 ),
               );
             },
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.red, width: 1),
@@ -346,8 +318,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.cancel, color: Colors.red, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.cancel, color: Colors.red, size: 18),
+                  const SizedBox(width: 8),
                   Text(
                     'যে যে সময়ে নামায নিষিদ্ধ',
                     style: AppTextStyles.bold.copyWith(
@@ -359,7 +331,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
               ),
             ),
           ),
-
           Divider(
               color: Colors.white54,
               height: isSmallScreen ? 16 : 20,
@@ -367,16 +338,10 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
           LayoutBuilder(
             builder: (context, constraints) {
               const int crossAxisCount = 2;
-              double crossAxisSpacing = isSmallScreen
-                  ? 6
-                  : isMediumScreen
-                  ? 8
-                  : 10;
-              double mainAxisSpacing = isSmallScreen
-                  ? 6
-                  : isMediumScreen
-                  ? 8
-                  : 10;
+              double crossAxisSpacing =
+              isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
+              double mainAxisSpacing =
+              isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
 
               return Wrap(
                 spacing: crossAxisSpacing,
@@ -393,14 +358,17 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                   if (start.isBefore(now) && now.isBefore(end)) {
                     final totalDuration = end.difference(start).inSeconds;
                     final passedDuration = now.difference(start).inSeconds;
-                    progress = totalDuration > 0 ? passedDuration / totalDuration : 0.0;
+                    progress = totalDuration > 0
+                        ? passedDuration / totalDuration
+                        : 0.0;
                   } else if (now.isAfter(end)) {
                     progress = 1.0;
                   } else {
                     progress = 0.0;
                   }
 
-                  final double itemWidth = (constraints.maxWidth - crossAxisSpacing) / 2;
+                  final double itemWidth =
+                      (constraints.maxWidth - crossAxisSpacing) / 2;
 
                   return SizedBox(
                     width: itemWidth,
@@ -419,7 +387,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                               : null,
                         ),
                         child: Padding(
-                          padding: EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
+                          padding:
+                          EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
@@ -445,8 +414,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                               ),
                               SizedBox(height: isSmallScreen ? 4 : 6),
                               ClipRRect(
-                                borderRadius:
-                                BorderRadius.circular(isSmallScreen ? 3 : 5),
+                                borderRadius: BorderRadius.circular(
+                                    isSmallScreen ? 3 : 5),
                                 child: LinearProgressIndicator(
                                   value: progress,
                                   backgroundColor:

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
+import 'core/controllers/location_controller.dart';
 import 'core/theme/app_text_styles.dart';
 import 'features/home/screens/home_page.dart';
+import 'package:get/get.dart';
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Get.put(LocationController());
   runApp(const MyApp());
 
 }
