@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/constants.dart';
+import '../../controllers/fatwah_controllers.dart';
 
 class IFatwaListScreen extends StatefulWidget {
   final List<dynamic> fatwaData;
@@ -21,12 +23,14 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
   List<dynamic> _allFatwas = [];
   List<dynamic> _displayedFatwas = [];
   TextEditingController _searchController = TextEditingController();
+  final fatwahControllers = Get.put(FatwahControllers());
 
   Set<String> _uniqueTags = {};
   String? _selectedTag;
 
   @override
   void initState() {
+    fatwahControllers.fetchFatwah();
     super.initState();
     _allFatwas = List.from(widget.fatwaData);
 
