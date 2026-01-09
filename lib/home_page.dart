@@ -11,7 +11,6 @@ import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
-import 'future/prayer_time/pages/local_prayer_time_screen.dart';
 import 'screen/daily_azkar_task_screen.dart';
 import 'const/constants.dart';
 import 'screen/dua_list_screen.dart';
@@ -302,17 +301,6 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.refresh, color: AppColors.white),
             onPressed: fetchAndStoreData,
-          ),
-
-          // Mosque Icon for Local Time Display (Placeholder)
-          IconButton(
-            icon: const Icon(Icons.mosque, color: AppColors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LocalPrayerTimeScreen()),
-              );
-            },
           ),
           // Display the badge based on the user's current level
           // Make the badge icon clickable
