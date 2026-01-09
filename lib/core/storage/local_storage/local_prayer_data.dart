@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../future/prayer_time/models/local_prayer_time_model.dart';
+
+import '../../../features/prayer_time/models/local_prayer_time_model.dart';
 
 class LocalPrayerData {
   static const _key = 'local_prayer_data';

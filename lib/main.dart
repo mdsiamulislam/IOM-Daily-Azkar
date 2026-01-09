@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:iomdailyazkar/home_page.dart'; // Make sure this path is correct
-import 'package:iomdailyazkar/theme/app_text_styles.dart'; // Make sure this path is cor
+import 'package:iomdailyazkar/home_page.dart';
+
+import 'core/theme/app_text_styles.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

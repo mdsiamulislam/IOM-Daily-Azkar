@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../const/constants.dart';
+import '../../../core/constants/constants.dart';
 import '../../../core/storage/local_storage/local_prayer_data.dart';
 import '../models/local_prayer_time_model.dart';
 
@@ -363,24 +363,10 @@ class _LocalPrayerTimeScreenState extends State<LocalPrayerTimeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryGreen.withOpacity(0.2),
-                    blurRadius: 20,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.mosque,
-                size: 64,
-                color: AppColors.primaryGreen,
-              ),
+            Icon(
+              Icons.mosque,
+              size: 64,
+              color: AppColors.primaryGreen,
             ),
             const SizedBox(height: 24),
             const Text(

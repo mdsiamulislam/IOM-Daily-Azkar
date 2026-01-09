@@ -2,21 +2,19 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:iomdailyazkar/widget/badge_info_dialog.dart';
-import 'package:iomdailyazkar/widget/prayer_time_widget.dart';
-import 'package:iomdailyazkar/screen/about_app_screen.dart';
-import 'package:iomdailyazkar/screen/i_fatwa_list_screen.dart';
-import 'package:iomdailyazkar/screen/our_apps_screen.dart';
-import 'package:iomdailyazkar/theme/app_text_styles.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
-import 'screen/daily_azkar_task_screen.dart';
-import 'const/constants.dart';
-import 'screen/dua_list_screen.dart';
+import 'core/constants/constants.dart';
+import 'core/theme/app_text_styles.dart';
+import 'features/about/presentation/screens/about_app_screen.dart';
+import 'features/about/presentation/screens/our_apps_screen.dart';
+import 'features/dua/presentation/screens/dua_list_screen.dart';
+import 'features/ifatwa/presentation/screens/i_fatwa_list_screen.dart';
+import 'features/prayer_time/pages/local_prayer_time_screen.dart';
+import 'features/prayer_times/presentation/widgets/prayer_time_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'widget/daily_task_widget.dart';
 
 
 
@@ -83,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 
   Future<void> _checkAndResetDailyTasks() async {
-    final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final resetTime = DateTime(now.year, now.month, now.day, 1); // 1 AM
@@ -180,7 +177,6 @@ class _HomeScreenState extends State<HomeScreen> {
         await fetchAndStoreData();
       }
     } catch (e) {
-      print("Local load error: $e");
       await fetchAndStoreData();
     }
   }
@@ -216,7 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
         throw Exception("Server returned error");
       }
     } catch (e) {
-      print("Fetch error: $e");
       if(mounted) { // Check if the widget is still in the tree before showing SnackBar
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text("ডেটা লোড করতে ব্যর্থ হয়েছে। ইন্টারনেট চেক করুন।"),
@@ -240,42 +235,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return const Icon(Icons.help_outline, color: AppColors.white, size: 40);
     }
   }
-
-  // --- Badge System Helper Functions (Corrected and Consolidated) ---
-  IconData _getBadgeIcon(int level) {
-    switch (level) {
-      case 1:
-        return Icons.star_border; // Level 1: An outline star
-      case 2:
-        return Icons.star; // Level 2: A filled star
-      case 3:
-        return Icons.military_tech; // Level 3: A medal
-      case 4:
-        return Icons.workspace_premium; // Level 4: A premium badge
-      case 5:
-        return Icons.emoji_events; // Level 5: A trophy
-      default:
-        return Icons.help_outline; // Default for unexpected levels
-    }
-  }
-
-  Color _getBadgeColor(int level) {
-    switch (level) {
-      case 1:
-        return Colors.white; // Or a subtle grey for level 1
-      case 2:
-        return Colors.yellow;
-      case 3:
-        return Colors.orangeAccent; // Bronze-like
-      case 4:
-        return Colors.blueGrey.shade200; // Silver-like
-      case 5:
-        return Colors.amber; // Gold
-      default:
-        return AppColors.white; // Fallback color
-    }
-  }
-  // --- End Badge System Helper Functions ---
 
   @override
   Widget build(BuildContext context) {
@@ -302,29 +261,16 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.refresh, color: AppColors.white),
             onPressed: fetchAndStoreData,
           ),
-          // Display the badge based on the user's current level
-          // Make the badge icon clickable
-          InkWell( // Use InkWell for a ripple effect on tap
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return BadgeInfoDialog(
-                    currentDayCount: _consecutiveDaysCompleted,
-                    currentUserLevel: _userLevel, // এখানে 'userLevel' এর পরিবর্তে 'currentUserLevel' ব্যবহার করুন
-                  );
-                },
+          // Local Mosque prayer time
+          IconButton(
+            icon: const Icon(Icons.mosque_outlined, color: AppColors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LocalPrayerTimeScreen()),
               );
             },
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8.0), // Add some padding
-              child: Icon(
-                _getBadgeIcon(_userLevel), // Get the icon based on the level
-                color: _getBadgeColor(_userLevel), // Get the color based on the level
-                size: 28, // Adjust size as needed
-              ),
-            ),
-          ),
+          )
         ],
       ),
       drawer: _buildDrawer(),
@@ -335,45 +281,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              if (!_allTasksCompleted) // Only show if tasks aren't completed
-                GestureDetector(
-                  onTap: () async {
-                    final result = await Navigator.push<bool>(
-                      context,
-                      MaterialPageRoute(builder: (_) => DailyAzkarTaskScreen()),
-                    );
-
-                    if (result != null && result) {
-                      // If tasks were completed, update consecutive days and check level
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('allTasksCompleted', true); // Mark as completed for today
-
-                      setState(() {
-                        _allTasksCompleted = true;
-                        _consecutiveDaysCompleted++; // Increment consecutive days
-                      });
-                      await prefs.setInt('consecutiveDaysCompleted', _consecutiveDaysCompleted);
-                      await _updateUserLevel(); // Check if user leveled up
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGreen,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: const DailyTaskWidget(),
-                  ),
-                ),
               const SizedBox(height: 10),
-              const CombinedPrayerTimesWidget(),
+              const CombinedPrayerTimesWidget(
+                city: 'dhaka',
+              ),
               const SizedBox(height: 16),
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
               const SizedBox(height: 24),
