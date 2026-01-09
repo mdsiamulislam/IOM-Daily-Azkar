@@ -1,43 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get/get.dart';
+
+
+class FontController extends GetxController {
+  // Observable font family
+  var fontFamily = 'HindSiliguri'.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadFont();
+  }
+
+  Future<void> loadFont() async {
+    print('Loading font preference...');
+    final prefs = await SharedPreferences.getInstance();
+    fontFamily.value = prefs.getString('banglaFont') ?? 'HindSiliguri';
+  }
+
+  Future<void> updateFont(String newFont) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('banglaFont', newFont);
+    fontFamily.value = newFont;
+  }
+}
+
+class FontManager {
+  static String fontFamily = 'HindSiliguri';
+
+  static Future<void> loadFont() async {
+
+    print('Loading font preference...');
+
+    final prefs = await SharedPreferences.getInstance();
+    fontFamily = prefs.getString('banglaFont') ?? 'HindSiliguri';
+  }
+}
+
 
 class AppTextStyles {
-  static const String _fontFamily = 'Ador-Noirrit';
+  static FontController get _fontController => Get.find<FontController>();
 
-  static const TextStyle regular = TextStyle(
-    fontFamily: _fontFamily,
-    fontWeight: FontWeight.w400, // Regular এর জন্য
-    fontSize: 16.0,
+  static TextStyle get regular => TextStyle(
+    fontFamily: _fontController.fontFamily.value,
+    fontWeight: FontWeight.w400,
+    fontSize: 16,
     color: Colors.black,
   );
 
-  static const TextStyle bold = TextStyle(
-    fontFamily: _fontFamily,
-    fontWeight: FontWeight.w700, // Bold এর জন্য
-    fontSize: 18.0,
+  static TextStyle get bold => TextStyle(
+    fontFamily: _fontController.fontFamily.value,
+    fontWeight: FontWeight.w700,
+    fontSize: 18,
     color: Colors.black,
   );
 
-  static const TextStyle light = TextStyle(
-    fontFamily: _fontFamily,
-    fontWeight: FontWeight.w300, // Light এর জন্য
-    fontSize: 14.0,
+  static TextStyle get light => TextStyle(
+    fontFamily: _fontController.fontFamily.value,
+    fontWeight: FontWeight.w300,
+    fontSize: 14,
     color: Colors.grey,
   );
 
-  // অন্যান্য স্টাইল, যেমন বড় টাইটেল
-  static const TextStyle heading1 = TextStyle(
-    fontFamily: _fontFamily,
-    fontWeight: FontWeight.w800, // Extra-bold এর কাছাকাছি
-    fontSize: 24.0,
+  static TextStyle get heading1 => TextStyle(
+    fontFamily: _fontController.fontFamily.value,
+    fontWeight: FontWeight.w800,
+    fontSize: 24,
     color: Colors.blueAccent,
   );
 
-  // আপনি চাইলে ফন্ট সাইজ বা কালার প্যারামিটার হিসেবেও দিতে পারেন
-  static TextStyle customSize({required double fontSize, Color color = Colors.black}) {
+  static TextStyle customSize({
+    required double fontSize,
+    Color color = Colors.black,
+    FontWeight fontWeight = FontWeight.w400,
+  }) {
     return TextStyle(
-      fontFamily: _fontFamily,
-      fontWeight: FontWeight.w400,
+      fontFamily: _fontController.fontFamily.value,
       fontSize: fontSize,
+      fontWeight: fontWeight,
       color: color,
     );
   }

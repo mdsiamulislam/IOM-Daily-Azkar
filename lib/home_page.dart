@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/features/prayer_times/settings/presentation/screens/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -314,10 +315,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundImage: AssetImage('assets/logo.png'),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Text('স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ', textAlign: TextAlign.center, style: AppTextStyles.bold.copyWith(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                 )),
               ],
             ),
@@ -333,6 +334,21 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+
+
+          // Setting Page
+          ListTile(
+            leading: const Icon(Icons.settings),
+            title: Text('সেটিংস', style: AppTextStyles.regular),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage()),
+              );
+            },
+          ),
+
           ListTile(
             leading: const Icon(Icons.share),
             title: Text('অ্যাপ শেয়ার করুন', style: AppTextStyles.regular),

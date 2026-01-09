@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/constants.dart';
-import '../../../core/storage/local_storage/local_prayer_data.dart';
+import '../../../core/local_storage/local_prayer_data.dart';
 import '../models/local_prayer_time_model.dart';
 
 class LocalPrayerTimeScreen extends StatefulWidget {

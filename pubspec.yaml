@@ -57,3 +57,21 @@ flutter:
           weight: 400
         - asset: assets/fonts/Ador-Noirrit-Light.ttf
           weight: 300
+
+    - family: HindSiliguri
+      fonts:
+        - asset: assets/fonts/HindSiliguri/HindSiliguri-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/HindSiliguri/HindSiliguri-Regular.ttf
+          weight: 600
+        - asset: assets/fonts/HindSiliguri/HindSiliguri-Light.ttf
+          weight: 300
+
+    - family: NotoSerifBengali
+      fonts:
+        - asset: assets/fonts/NotoSerifBengali/NotoSerifBengaliBold.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSerifBengali/NotoSerifBengaliRegular.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSerifBengali/NotoSerifBengaliLight.ttf
+          weight: 300

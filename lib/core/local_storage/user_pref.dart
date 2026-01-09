@@ -2,6 +2,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UserPref{
 
+  // Set Bangla Font
+  void setBanglaFontEnabled(String fontName)async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('banglaFont', fontName);
+  }
+
+  Future<String> getBanglaFontEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('banglaFont') ?? "HindSiliguri";
+  }
+
   void setPrayerTimeSingle(bool isSingleTimeTable)async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isSingleTimeTable', isSingleTimeTable);
