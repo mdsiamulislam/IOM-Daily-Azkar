@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:iomdailyazkar/features/prayer_times/settings/presentation/screens/settings_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -13,9 +12,11 @@ import 'features/about/presentation/screens/our_apps_screen.dart';
 import 'features/dua/presentation/screens/dua_list_screen.dart';
 import 'features/ifatwa/presentation/screens/i_fatwa_list_screen.dart';
 import 'features/prayer_time/pages/local_prayer_time_screen.dart';
-import 'features/prayer_times/presentation/widgets/prayer_time_widget.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'features/prayer_time/widgets/prayer_time_widget.dart';
+import 'features/settings/presentation/screens/settings_page.dart';
 
 
 

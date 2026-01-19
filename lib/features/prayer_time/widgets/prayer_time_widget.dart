@@ -6,7 +6,6 @@ import 'package:iomdailyazkar/core/constants/constants.dart';
 import '../../../../core/constants/city_data.dart';
 import '../../../../core/local_storage/user_pref.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../screens/forbidden_prayer_times_page.dart';
 
 class CombinedPrayerTimesWidget extends StatefulWidget {
   final String city; // city key (like "Dhaka")
@@ -302,12 +301,6 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
           ),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const ForbiddenPrayerTimesPage(),
-                ),
-              );
             },
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
