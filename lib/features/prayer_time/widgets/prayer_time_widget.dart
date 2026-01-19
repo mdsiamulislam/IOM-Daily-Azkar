@@ -48,6 +48,18 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     _initCityAndPrayerTimes();
   }
 
+
+  @override
+  void didUpdateWidget(covariant CombinedPrayerTimesWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // 🔥 City changed
+    if (oldWidget.city != widget.city) {
+      _initCityAndPrayerTimes();
+    }
+  }
+
+
   Future<void> _initCityAndPrayerTimes() async {
     String keyToUse = 'Dhaka';
 
@@ -253,201 +265,203 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
       {'name': prayerLabels['isha']!, 'start': prayerTimes!.isha, 'end': tomorrowFajr},
     ];
 
-    return Container(
-      width: double.infinity,
-      constraints: BoxConstraints(
-        maxWidth: screenWidth * 0.95,
-        minWidth: 300,
-      ),
-      padding: EdgeInsets.all(containerPadding),
-      decoration: BoxDecoration(
-        color: AppColors.primaryGreen,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return Obx(
+        ()=> Container(
+          width: double.infinity,
+          constraints: BoxConstraints(
+            maxWidth: screenWidth * 0.95,
+            minWidth: 300,
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Text(
-                (remainingTime.isNegative)
-                    ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
-                    : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
-                style: AppTextStyles.bold.copyWith(
-                  fontSize: timerFontSize,
-                  color: Colors.white,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                formatBanglaDuration(remainingTime),
-                style: AppTextStyles.bold.copyWith(
-                  fontSize: timerFontSize,
-                  color: Colors.white,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          padding: EdgeInsets.all(containerPadding),
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-          Divider(
-              color: Colors.white54,
-              height: isSmallScreen ? 16 : 20,
-              thickness: 1
-          ),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              const int crossAxisCount = 2;
-              double crossAxisSpacing =
-              isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
-              double mainAxisSpacing =
-              isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text(
+                    (remainingTime.isNegative)
+                        ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
+                        : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
+                    style: AppTextStyles.bold.copyWith(
+                      fontSize: timerFontSize,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    formatBanglaDuration(remainingTime),
+                    style: AppTextStyles.bold.copyWith(
+                      fontSize: timerFontSize,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+              Divider(
+                  color: Colors.white54,
+                  height: isSmallScreen ? 16 : 20,
+                  thickness: 1
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  const int crossAxisCount = 2;
+                  double crossAxisSpacing =
+                  isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
+                  double mainAxisSpacing =
+                  isSmallScreen ? 6 : isMediumScreen ? 8 : 10;
 
-              return Wrap(
-                spacing: crossAxisSpacing,
-                runSpacing: mainAxisSpacing,
-                children: List.generate(prayers.length, (index) {
-                  final prayer = prayers[index];
-                  final String name = prayer['name'];
-                  final DateTime start = prayer['start'];
-                  final DateTime end = prayer['end'];
-                  final bool isActive = (name == currentPrayerName);
+                  return Wrap(
+                    spacing: crossAxisSpacing,
+                    runSpacing: mainAxisSpacing,
+                    children: List.generate(prayers.length, (index) {
+                      final prayer = prayers[index];
+                      final String name = prayer['name'];
+                      final DateTime start = prayer['start'];
+                      final DateTime end = prayer['end'];
+                      final bool isActive = (name == currentPrayerName);
 
-                  double progress = 0.0;
-                  final now = DateTime.now();
-                  if (start.isBefore(now) && now.isBefore(end)) {
-                    final totalDuration = end.difference(start).inSeconds;
-                    final passedDuration = now.difference(start).inSeconds;
-                    progress = totalDuration > 0
-                        ? passedDuration / totalDuration
-                        : 0.0;
-                  } else if (now.isAfter(end)) {
-                    progress = 1.0;
-                  } else {
-                    progress = 0.0;
-                  }
+                      double progress = 0.0;
+                      final now = DateTime.now();
+                      if (start.isBefore(now) && now.isBefore(end)) {
+                        final totalDuration = end.difference(start).inSeconds;
+                        final passedDuration = now.difference(start).inSeconds;
+                        progress = totalDuration > 0
+                            ? passedDuration / totalDuration
+                            : 0.0;
+                      } else if (now.isAfter(end)) {
+                        progress = 1.0;
+                      } else {
+                        progress = 0.0;
+                      }
 
-                  final double itemWidth =
-                      (constraints.maxWidth - crossAxisSpacing) / 2;
+                      final double itemWidth =
+                          (constraints.maxWidth - crossAxisSpacing) / 2;
 
-                  return SizedBox(
-                    width: itemWidth,
-                    child: IntrinsicHeight(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.white.withOpacity(0.25)
-                              : Colors.white.withOpacity(0.1),
-                          borderRadius:
-                          BorderRadius.circular(isSmallScreen ? 8 : 12),
-                          border: isActive
-                              ? Border.all(
-                              color: Colors.white,
-                              width: isSmallScreen ? 1.5 : 2)
-                              : null,
-                        ),
-                        child: Padding(
-                          padding:
-                          EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
+                      return SizedBox(
+                        width: itemWidth,
+                        child: IntrinsicHeight(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isActive
+                                  ? Colors.white.withOpacity(0.25)
+                                  : Colors.white.withOpacity(0.1),
+                              borderRadius:
+                              BorderRadius.circular(isSmallScreen ? 8 : 12),
+                              border: isActive
+                                  ? Border.all(
+                                  color: Colors.white,
+                                  width: isSmallScreen ? 1.5 : 2)
+                                  : null,
+                            ),
+                            child: Padding(
+                              padding:
+                              EdgeInsets.all(isSmallScreen ? 8.0 : 10.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    name,
-                                    style: AppTextStyles.bold.copyWith(
-                                      fontSize: prayerNameFontSize,
-                                      color: Colors.white70,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                  Row(
+                                    children: [
+                                      Text(
+                                        name,
+                                        style: AppTextStyles.bold.copyWith(
+                                          fontSize: prayerNameFontSize,
+                                          color: Colors.white70,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
+                                        style: AppTextStyles.bold.copyWith(
+                                          fontSize: prayerTimeFontSize,
+                                          color: Colors.white,
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
-                                  SizedBox(width: 10),
-                                  Text(
-                                    '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
-                                    style: AppTextStyles.bold.copyWith(
-                                      fontSize: prayerTimeFontSize,
-                                      color: Colors.white,
+                                  SizedBox(height: isSmallScreen ? 4 : 6),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                        isSmallScreen ? 3 : 5),
+                                    child: LinearProgressIndicator(
+                                      value: progress,
+                                      backgroundColor:
+                                      Colors.white.withOpacity(0.3),
+                                      valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                          AppColors.lightGreen
+                                      ),
+                                      minHeight: isSmallScreen ? 3 : 4,
                                     ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                              SizedBox(height: isSmallScreen ? 4 : 6),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(
-                                    isSmallScreen ? 3 : 5),
-                                child: LinearProgressIndicator(
-                                  value: progress,
-                                  backgroundColor:
-                                  Colors.white.withOpacity(0.3),
-                                  valueColor:
-                                  const AlwaysStoppedAnimation<Color>(
-                                      AppColors.lightGreen
-                                  ),
-                                  minHeight: isSmallScreen ? 3 : 4,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    }),
                   );
-                }),
-              );
-            },
-          ),
-          Divider(
-              color: Colors.white54,
-              height: isSmallScreen ? 16 : 20,
-              thickness: 1
-          ),
-          GestureDetector(
-            onTap: () {
-              Get.to(NamazProhibitedTimesPage());
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cancel, color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'যে যে সময়ে নামায নিষিদ্ধ',
-                    style: AppTextStyles.bold.copyWith(
-                      color: Colors.redAccent,
-                      fontSize: 12,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 8,
-                  ),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                      color: Colors.redAccent,
-                      size: 18
-                  )
-                ],
+                },
               ),
-            ),
+              Divider(
+                  color: Colors.white54,
+                  height: isSmallScreen ? 16 : 20,
+                  thickness: 1
+              ),
+              GestureDetector(
+                onTap: () {
+                  Get.to(NamazProhibitedTimesPage());
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cancel, color: Colors.redAccent, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'যে যে সময়ে নামায নিষিদ্ধ',
+                        style: AppTextStyles.bold.copyWith(
+                          color: Colors.redAccent,
+                          fontSize: 12,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 8,
+                      ),
+                      Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.redAccent,
+                          size: 18
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        )
     );
   }
 }

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/features/prayer_time/controllers/prayer_times_controller.dart';
+import 'package:iomdailyazkar/features/prayer_time/pages/city_selection_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
@@ -14,6 +16,7 @@ import 'features/ifatwa/presentation/screens/i_fatwa_list_screen.dart';
 import 'features/prayer_time/pages/local_prayer_time_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
 
 import 'features/prayer_time/widgets/prayer_time_widget.dart';
 import 'features/settings/presentation/screens/settings_page.dart';
@@ -27,6 +30,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
+  final PrayerTimesController prayerTimesController = Get.put(PrayerTimesController());
+
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
@@ -245,11 +251,27 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        centerTitle: true,
         title: const Text(
           "IOM Daily Azkars",
         ),
         actions: [
+          GestureDetector(
+            onTap: (){
+              Get.to(CitySelectionPage());
+            },
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined
+                ),
+                Obx(
+                    ()=> Text(prayerTimesController.city.value, style: AppTextStyles.regular.copyWith(
+                        color: Colors.white
+                    ))
+                )
+              ],
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: fetchAndStoreData,
@@ -275,8 +297,10 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16),
             children: [
               const SizedBox(height: 10),
-              const CombinedPrayerTimesWidget(
-                city: 'dhaka',
+              Obx(
+                  ()=> CombinedPrayerTimesWidget(
+                    city: prayerTimesController.city.value,
+                  ),
               ),
               const SizedBox(height: 16),
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
