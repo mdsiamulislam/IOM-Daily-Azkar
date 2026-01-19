@@ -21,7 +21,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -245,26 +244,18 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
         centerTitle: true,
         title: const Text(
           "IOM Daily Azkars",
-          style: TextStyle(
-            fontSize: 20,
-            color: AppColors.white,
-            fontWeight: FontWeight.bold,
-          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.white),
+            icon: const Icon(Icons.refresh),
             onPressed: fetchAndStoreData,
           ),
           // Local Mosque prayer time
           IconButton(
-            icon: const Icon(Icons.mosque_outlined, color: AppColors.white),
+            icon: const Icon(Icons.mosque_outlined),
             onPressed: () {
               Navigator.push(
                 context,
@@ -339,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Setting Page
           ListTile(
             leading: const Icon(Icons.settings),
-            title: Text('সেটিংস', style: AppTextStyles.regular),
+            title: Text('সেটিংস'),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
@@ -351,7 +342,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           ListTile(
             leading: const Icon(Icons.share),
-            title: Text('অ্যাপ শেয়ার করুন', style: AppTextStyles.regular),
+            title: Text('অ্যাপ শেয়ার করুন'),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
               final packageName = info.packageName;
@@ -362,7 +353,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.star),
-            title: Text('রেটিং দিন', style: AppTextStyles.regular,),
+            title: Text('রেটিং দিন'),
             onTap: () async {
               final info = await PackageInfo.fromPlatform();
               final packageName = info.packageName;
@@ -382,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.feedback),
-            title: Text('ফিডব্যাক দিন', style: AppTextStyles.regular),
+            title: Text('ফিডব্যাক দিন'),
             onTap: () async {
               final Uri emailLaunchUri = Uri(
                 scheme: 'mailto',
@@ -403,7 +394,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.info),
-            title: Text('অ্যাপ সম্পর্কে', style: AppTextStyles.regular),
+            title: Text('অ্যাপ সম্পর্কে'),
             onTap: (){
               Navigator.push(
                 context,

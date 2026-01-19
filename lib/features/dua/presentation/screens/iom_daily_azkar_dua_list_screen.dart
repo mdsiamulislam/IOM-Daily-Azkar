@@ -95,17 +95,9 @@ class _IomDailyAzkarDuaListScreenState extends State<IomDailyAzkarDuaListScreen>
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: AppColors.white),
         title: const Text(
           'হেফাজত এর আমল সমূহ',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
         ),
-        elevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

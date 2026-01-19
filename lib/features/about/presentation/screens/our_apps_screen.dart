@@ -45,17 +45,9 @@ class OurAppsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.green[50], // হালকা সবুজ ব্যাকগ্রাউন্ড
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: AppColors.white),
         title: const Text(
           'আমাদের অন্যান্য অ্যাপস',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
         ),
-        elevation: 0,
       ),
       body: otherApps.isEmpty
           ? const Center(child: Text('বর্তমানে কোনো অ্যাপ উপলব্ধ নেই।'))

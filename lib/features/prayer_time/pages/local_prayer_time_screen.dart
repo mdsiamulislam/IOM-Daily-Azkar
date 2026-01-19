@@ -342,19 +342,10 @@ class _LocalPrayerTimeScreenState extends State<LocalPrayerTimeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'স্থানীয় নামাজের সময়',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-          ),
         ),
-        centerTitle: true,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())

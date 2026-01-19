@@ -22,15 +22,9 @@ class AboutAppScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50], // হালকা সবুজ ব্যাকগ্রাউন্ড
       appBar: AppBar(
         title: Text(
-          'আমাদের অ্যাপ সম্পর্কে',
-          style: TextStyle(
-            fontSize: 20,
-            color: AppColors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          'আমাদের অ্যাপ সম্পর্কে'
         ),
         centerTitle: true,
         backgroundColor: AppColors.primaryGreen, // অ্যাপের থিমের সাথে সামঞ্জস্যপূর্ণ

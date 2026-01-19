@@ -3,10 +3,9 @@ import 'package:get/get.dart';
 import 'package:iomdailyazkar/core/constants/constants.dart';
 
 import '../../../../core/constants/city_data.dart';
+import '../../../../core/controllers/location_controller.dart';
 import '../../../../core/local_storage/local_prayer_time.dart';
 import '../../../../core/local_storage/user_pref.dart';
-import '../../../home/controllers/location_controller.dart';
-import '../../../home/widget/dual_time_card.dart';
 import '../../controllers/change_widget.dart';
 import '../widgets/prayer_time_widget.dart' hide LocationController;
 
@@ -167,15 +166,15 @@ class _PrayerTimeSettingScreenState extends State<PrayerTimeSettingScreen> {
             const SizedBox(height: 16),
 
             // Time Table Widget
-            Obx(() {
-              return _selectedOption.value == TimeTableOption.dual
-                  ?  PrayerTimeWidget(
-                city:'Dhaka',
-              )
-                  : CombinedPrayerTimesWidget(
-                city: 'Dhaka',
-              );
-            }),
+            // Obx(() {
+            //   return _selectedOption.value == TimeTableOption.dual
+            //   //     ?  PrayerTimeWidget(
+            //   //   city:'Dhaka',
+            //   // )
+            //       : CombinedPrayerTimesWidget(
+            //     city: 'Dhaka',
+            //   );
+            // }),
 
             const SizedBox(height: 20),
 

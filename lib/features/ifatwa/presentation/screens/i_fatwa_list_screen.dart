@@ -293,19 +293,10 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[50],
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: AppColors.white),
         title: const Text(
-          'ফতোয়ার তালিকা',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          'ফতোয়ার তালিকা'
         ),
-        elevation: 0,
       ),
       body: Column(
         children: [

@@ -57,15 +57,8 @@ class _DuaListScreenState extends State<DuaListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppColors.primaryGreen,
-        iconTheme: const IconThemeData(color: AppColors.white),
         title: const Text(
           'দোয়ার তালিকা',
-          style: TextStyle(
-            color: AppColors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
         ),
         elevation: 0,
       ),
