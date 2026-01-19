@@ -262,7 +262,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
       {'name': prayerLabels['dhuhr']!, 'start': prayerTimes!.dhuhr, 'end': prayerTimes!.asr},
       {'name': prayerLabels['asr']!, 'start': prayerTimes!.asr, 'end': prayerTimes!.maghrib},
       {'name': prayerLabels['maghrib']!, 'start': prayerTimes!.maghrib, 'end': prayerTimes!.isha},
-      {'name': prayerLabels['isha']!, 'start': prayerTimes!.isha, 'end': tomorrowFajr},
+      {'name': prayerLabels['isha']!, 'start': prayerTimes!.isha, 'end': tomorrowFajr}
+
     ];
 
     return Obx(

@@ -1,447 +1,577 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import '../../../../core/constants/constants.dart';
+import 'package:share_plus/share_plus.dart';
 
 class IFatwaListScreen extends StatefulWidget {
   final List<dynamic> fatwaData;
   final String? filterTag;
 
-  IFatwaListScreen({
-    Key? key,
+  const IFatwaListScreen({
+    super.key,
     required this.fatwaData,
     this.filterTag,
-  }) : super(key: key);
+  });
 
   @override
   State<IFatwaListScreen> createState() => _IFatwaListScreenState();
 }
 
 class _IFatwaListScreenState extends State<IFatwaListScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   List<dynamic> _allFatwas = [];
   List<dynamic> _displayedFatwas = [];
-  TextEditingController _searchController = TextEditingController();
+  Set<String> _tags = {'সকল'};
+  Set<String> _bookmarkedFatwas = {};
 
-  Set<String> _uniqueTags = {};
-  String? _selectedTag;
-
-  // Pagination variables
-  int _currentPage = 0;
-  static const int _limit = 20;
   bool _isLoading = false;
-  bool _hasMoreData = true;
-  ScrollController _scrollController = ScrollController();
+  bool _hasMore = true;
+  bool _showSearchBar = false;
+  bool _showTagsSheet = false;
 
-  // Search state
-  bool _isSearchMode = false;
-  String _lastSearchQuery = '';
+  String _searchQuery = '';
+  String _selectedTag = 'সকল';
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
-    _searchController.addListener(_onSearchChanged);
-    _scrollController.addListener(_onScroll);
-  }
-
-  void _initializeData() {
-    // Initialize with local data first
+    _loadBookmarks();
     _allFatwas = List.from(widget.fatwaData);
-    _displayedFatwas = List.from(_allFatwas);
+    _extractInitialTags();
+    _applyFilters();
 
-    // Extract unique tags from local data
-    for (var fatwa in _allFatwas) {
-      final tags = _extractTags(fatwa);
-      _uniqueTags.addAll(tags);
-    }
-
-    if (widget.filterTag != null && _uniqueTags.contains(widget.filterTag)) {
-      _selectedTag = widget.filterTag;
-      _applyLocalFilters();
-    }
-
-    // Load initial data from API
-    _loadApiData();
+    _scrollController.addListener(_onScroll);
+    _fetchFatwas();
   }
 
-  // Helper method to extract tags from both data structures
+  Future<void> _loadBookmarks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bookmarks = prefs.getStringList('bookmarked_fatwas') ?? [];
+    setState(() {
+      _bookmarkedFatwas = bookmarks.toSet();
+    });
+  }
+
+  Future<void> _toggleBookmark(String fatwaId) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_bookmarkedFatwas.contains(fatwaId)) {
+      _bookmarkedFatwas.remove(fatwaId);
+    } else {
+      _bookmarkedFatwas.add(fatwaId);
+    }
+    await prefs.setStringList('bookmarked_fatwas', _bookmarkedFatwas.toList());
+    setState(() {});
+  }
+
+  Future<void> _fetchFatwas() async {
+    if (_isLoading || !_hasMore) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://search.ifatwa.info/indexes/posts/search'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+          'Bearer bdbad192801a4f64141931602d982d78139a4d1f5c1ff686fb4741d7f65a31cd',
+        },
+        body: jsonEncode({
+          'q': _searchQuery.isNotEmpty ? _searchQuery : 'posts',
+          'limit': 20,
+          'offset': _currentPage * 20,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final hits = jsonDecode(response.body)['hits'] ?? [];
+
+        if (hits.isEmpty) {
+          _hasMore = false;
+        } else {
+          if (_currentPage == 0) {
+            _allFatwas = hits;
+          } else {
+            _allFatwas.addAll(hits);
+          }
+          _updateTags(hits);
+          _applyFilters();
+          _currentPage++;
+        }
+      }
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('ডেটা লোড করতে সমস্যা হয়েছে'),
+          backgroundColor: Colors.red.shade600,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >
+        _scrollController.position.maxScrollExtent - 300) {
+      _fetchFatwas();
+    }
+  }
+
+  void _onSearchChanged(String value) {
+    _searchQuery = value.trim();
+    _currentPage = 0;
+    _hasMore = true;
+    _applyFilters();
+    if (value.isNotEmpty) {
+      _fetchFatwas();
+    }
+  }
+
+  void _onTagChanged(String tag) {
+    setState(() => _selectedTag = tag);
+    _applyFilters();
+    if (_showTagsSheet) {
+      Navigator.pop(context);
+      _showTagsSheet = false;
+    }
+  }
+
+  void _applyFilters() {
+    List<dynamic> list = List.from(_allFatwas);
+
+    if (_selectedTag != 'সকল') {
+      list = list.where((f) => _extractTags(f).contains(_selectedTag)).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      list = list.where((f) {
+        final title = _getFatwaField(f, 'question_title', 'qtitle').toLowerCase();
+        final question = _getFatwaField(f, 'question_details', 'question').toLowerCase();
+        final answer = _getFatwaField(f, 'answer', 'content').toLowerCase();
+
+        return title.contains(query) ||
+            question.contains(query) ||
+            answer.contains(query);
+      }).toList();
+    }
+
+    list.sort((a, b) {
+      final at = a['createdAt'] ?? a['timestamp'] ?? '';
+      final bt = b['createdAt'] ?? b['timestamp'] ?? '';
+      return bt.toString().compareTo(at.toString());
+    });
+
+    setState(() => _displayedFatwas = list);
+  }
+
+  String _getFatwaField(dynamic fatwa, String field1, String field2) {
+    return (fatwa[field1] ?? fatwa[field2] ?? '').toString().trim();
+  }
+
+  void _extractInitialTags() {
+    for (var f in _allFatwas) {
+      _tags.addAll(_extractTags(f));
+    }
+  }
+
+  void _updateTags(List<dynamic> list) {
+    for (var f in list) {
+      _tags.addAll(_extractTags(f));
+    }
+  }
+
   List<String> _extractTags(dynamic fatwa) {
     List<String> tags = [];
 
-    // For local data structure
-    if (fatwa['tag'] != null) {
-      tags.add(fatwa['tag']);
+    if (fatwa['tag'] != null && fatwa['tag'].toString().isNotEmpty) {
+      tags.add(fatwa['tag'].toString());
     }
 
-    // For API data structure
-    if (fatwa['tags'] != null && fatwa['tags'] is List) {
-      for (var tag in fatwa['tags']) {
-        if (tag != null && tag.toString().isNotEmpty) {
+    if (fatwa['tags'] is List) {
+      final tagList = fatwa['tags'] as List;
+      for (var tag in tagList) {
+        if (tag.toString().isNotEmpty) {
           tags.add(tag.toString());
         }
       }
     }
 
-    return tags;
+    return tags.where((tag) => tag.isNotEmpty).toList();
   }
 
-  // Helper method to get field value with fallback
-  String? _getFieldValue(dynamic fatwa, String localField, String apiField) {
-    return fatwa[localField] ?? fatwa[apiField];
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoading && _hasMoreData) {
-        if (_isSearchMode && _searchController.text.trim().isNotEmpty) {
-        } else {
-          _loadApiData(loadMore: true);
-        }
-      }
-    }
-  }
-
-  Future<void> _loadApiData({bool loadMore = false}) async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
-    try {
-      // final offset = loadMore ? _displayedFatwas.length : 0;
-      // final queryParams = {
-      //   'limit': _limit.toString(),
-      //   'offset': offset.toString(),
-      //   if (_selectedTag != null && _selectedTag != 'All')
-      //     'tags': _selectedTag!,
-      // };
-
-      final response = await http.post(
-        Uri.parse('https://search.ifatwa.info/indexes/posts/search'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization' : 'Bearer bdbad192801a4f64141931602d982d78139a4d1f5c1ff686fb4741d7f65a31cd'
-        },
-        body: jsonEncode(
-            {
-              'q':'posts',
-              'limit': 1000
-            }
-        )
-      );
-      
-      print('API Response: ${response.body}');
-
-
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final List<dynamic> hits = data['hits'] ?? [];
-
-        setState(() {
-          if (loadMore) {
-            _displayedFatwas.addAll(hits);
-          } else {
-            // Mix API data with local data for better results
-            _displayedFatwas = [...hits, ..._allFatwas];
-            _currentPage = 0;
-          }
-
-          _hasMoreData = hits.length == _limit;
-          _isSearchMode = false;
-          _isLoading = false;
-        });
-
-        // Update unique tags from API results
-        _updateTagsFromResults(hits);
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-        // Handle error case
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load data. Status: ${response.statusCode} and body ${response.body}')),
-        );
-      }
-    } catch (e) {
-      print('API error: $e');
-      setState(() => _isLoading = false);
-
-      // Fallback to local data
-      if (!loadMore) {
-        _applyLocalFilters();
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ডেটা লোড করতে সমস্যা হয়েছে। স্থানীয় ডেটা দেখানো হচ্ছে।')),
-      );
-    }
-  }
-
-
-  void _updateTagsFromResults(List<dynamic> results) {
-    for (var result in results) {
-      final tags = _extractTags(result);
-      _uniqueTags.addAll(tags);
-    }
-  }
-
-  void _searchLocal(String query) {
-    final searchTerms = query.toLowerCase().split(' ').where((s) => s.isNotEmpty).toList();
-
-    setState(() {
-      _displayedFatwas = _allFatwas.where((fatwa) {
-        if (_selectedTag != null && _selectedTag != 'All') {
-          final tags = _extractTags(fatwa);
-          if (!tags.contains(_selectedTag)) {
-            return false;
-          }
-        }
-
-        final title = (_getFieldValue(fatwa, 'question_title', 'qtitle') ?? '').toLowerCase();
-        final details = (_getFieldValue(fatwa, 'question_details', 'question') ?? '').toLowerCase();
-        final answer = (_getFieldValue(fatwa, 'answer', 'content') ?? '').toLowerCase();
-
-        return searchTerms.any((term) =>
-        title.contains(term) ||
-            details.contains(term) ||
-            answer.contains(term));
-      }).toList();
-
-      _displayedFatwas.sort((a, b) {
-        final timestampA = a['timestamp'] ?? a['createdAt'];
-        final timestampB = b['timestamp'] ?? b['createdAt'];
-
-        if (timestampA == null && timestampB == null) return 0;
-        if (timestampA == null) return 1;
-        if (timestampB == null) return -1;
-
-        return (timestampA as Comparable).compareTo(timestampB as Comparable);
-      });
-
-      _isSearchMode = true;
-      _hasMoreData = false;
+  void _showFilterBottomSheet() {
+    _showTagsSheet = true;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'ট্যাগ নির্বাচন করুন',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _tags.map((tag) {
+                    return FilterChip(
+                      label: Text(tag),
+                      selected: _selectedTag == tag,
+                      onSelected: (_) => _onTagChanged(tag),
+                      backgroundColor: Colors.grey.shade100,
+                      selectedColor: Colors.blue.shade100,
+                      labelStyle: TextStyle(
+                        color: _selectedTag == tag ? Colors.blue.shade800 : Colors.grey.shade800,
+                        fontWeight: _selectedTag == tag ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).then((_) {
+      _showTagsSheet = false;
     });
-  }
-
-  void _applyLocalFilters() {
-    List<dynamic> filteredByTag = [];
-
-    if (_selectedTag == null || _selectedTag == 'All') {
-      filteredByTag = List.from(_allFatwas);
-    } else {
-      filteredByTag = _allFatwas.where((fatwa) {
-        final tags = _extractTags(fatwa);
-        return tags.contains(_selectedTag);
-      }).toList();
-    }
-
-    setState(() {
-      _displayedFatwas = filteredByTag;
-      _displayedFatwas.sort((a, b) {
-        final timestampA = a['timestamp'] ?? a['createdAt'];
-        final timestampB = b['timestamp'] ?? b['createdAt'];
-
-        if (timestampA == null && timestampB == null) return 0;
-        if (timestampA == null) return 1;
-        if (timestampB == null) return -1;
-
-        return (timestampA as Comparable).compareTo(timestampB as Comparable);
-      });
-
-      _isSearchMode = false;
-      _hasMoreData = false;
-    });
-  }
-
-  void _onSearchChanged() {
-    final query = _searchController.text.trim();
-
-    if (query.isEmpty) {
-      // Reset to tag-filtered data
-      if (_selectedTag != null && _selectedTag != 'All') {
-        _loadApiData();
-      } else {
-        _loadApiData();
-      }
-    } else {
-      // Debounce search
-      Future.delayed(Duration(milliseconds: 500), () {
-        if (_searchController.text.trim() == query && query.isNotEmpty) {
-          // _searchApiData(query);
-        }
-      });
-    }
-  }
-
-  void _onTagChanged(String? newTag) {
-    setState(() {
-      _selectedTag = newTag;
-      _searchController.clear();
-    });
-
-    if (newTag == null || newTag == 'All') {
-      _loadApiData();
-    } else {
-      _loadApiData();
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'ফতোয়ার তালিকা'
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search Field
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.lightGreen,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.white.withOpacity(0.7),
-                    offset: Offset(-2, -2),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                  BoxShadow(
-                    color: AppColors.innerShadowColor.withOpacity(0.1),
-                    offset: Offset(2, 2),
-                    blurRadius: 4,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: 'ফতোয়া খুঁজুন...',
-                  hintStyle: TextStyle(color: Colors.grey[700]),
-                  prefixIcon: Icon(Icons.search, color: AppColors.primaryGreen, size: 24),
-                  suffixIcon: _searchController.text.isNotEmpty
-                      ? IconButton(
-                    icon: Icon(Icons.clear, color: Colors.grey[600]),
-                    onPressed: () {
-                      _searchController.clear();
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                  )
-                      : null,
-                  border: InputBorder.none,
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: AppColors.primaryGreen, width: 2.0),
-                  ),
-                  enabledBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        title: _showSearchBar ? null : const Text('ফতোয়ার তালিকা'),
+        actions: [
+          if (!_showSearchBar)
+            IconButton(
+              onPressed: () {
+                setState(() => _showSearchBar = true);
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  _searchFocusNode.requestFocus();
+                });
+              },
+              icon: const Icon(Icons.search),
+            ),
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BookmarkedFatwasScreen(
+                  allFatwas: _allFatwas,
+                  bookmarkedIds: _bookmarkedFatwas,
                 ),
-                cursorColor: AppColors.primaryGreen,
-                style: TextStyle(color: Colors.black87, fontSize: 16),
-                onChanged: (query) {
-                  if (mounted) {
-                    setState(() {});
-                  }
-                },
-                textInputAction: TextInputAction.search,
               ),
             ),
-          ),
-
-          // Filter Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-            child: Row(
+            icon: Stack(
               children: [
-                const Text(
-                  'ট্যাগ:',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: DropdownButton<String>(
-                    value: _selectedTag,
-                    hint: const Text('সব'),
-                    isExpanded: true,
-                    underline: Container(),
-                    items: ['All', ..._uniqueTags].map((String tag) {
-                      return DropdownMenuItem<String>(
-                        value: tag,
-                        child: Text(tag),
-                      );
-                    }).toList(),
-                    onChanged: _onTagChanged,
+                const Icon(Icons.bookmark_border),
+                if (_bookmarkedFatwas.isNotEmpty)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${_bookmarkedFatwas.length}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.question_answer, color: AppColors.primaryGreen),
-                      const SizedBox(width: 4),
-                      const Text('প্রশ্ন করুন', style: TextStyle(color: AppColors.primaryGreen)),
-                    ],
-                  ),
-                  onPressed: () {
-                    const url = 'https://ifatwa.info/rules';
-                    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication).catchError((error) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('লিঙ্ক খুলতে ব্যর্থ হয়েছে।')),
-                      );
-                    });
-                  },
-                ),
               ],
             ),
           ),
+        ],
+      ),
+      body: Column(
+        children: [
+          if (_showSearchBar) _buildSearchBar(),
+          _buildFilterChips(),
+          Expanded(child: _buildFatwaList()),
+        ],
+      ),
+      floatingActionButton: _selectedTag != 'সকল'
+          ? FloatingActionButton.extended(
+        onPressed: _showFilterBottomSheet,
+        icon: const Icon(Icons.filter_alt),
+        label: Text(_selectedTag),
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+      )
+          : null,
+    );
+  }
 
-          // Results List
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.white,
+      child: Row(
+        children: [
           Expanded(
-            child: _displayedFatwas.isEmpty && !_isLoading
-                ? const Center(child: Text('কোনো ফতোয়া খুঁজে পাওয়া যায়নি।'))
-                : ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              itemCount: _displayedFatwas.length + (_isLoading ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == _displayedFatwas.length) {
-                  return _buildLoadingIndicator();
-                }
-
-                final fatwa = _displayedFatwas[index];
-                return FatwaCardWidget(fatwa: fatwa);
-              },
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'ফতোয়া খুঁজুন...',
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey),
+                  onPressed: () {
+                    _searchController.clear();
+                    _onSearchChanged('');
+                  },
+                )
+                    : null,
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+              ),
             ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: () {
+              setState(() => _showSearchBar = false);
+              _searchController.clear();
+              _onSearchChanged('');
+              _searchFocusNode.unfocus();
+            },
+            child: const Text('বাতিল'),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLoadingIndicator() {
+  Widget _buildFilterChips() {
+    final popularTags = _tags.where((tag) => tag != 'সকল').take(10).toList();
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      alignment: Alignment.center,
-      child: CircularProgressIndicator(
-        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            FilterChip(
+              label: const Text('সকল'),
+              selected: _selectedTag == 'সকল',
+              onSelected: (_) => _onTagChanged('সকল'),
+              backgroundColor: Colors.grey.shade100,
+              selectedColor: Colors.blue.shade100,
+              labelStyle: TextStyle(
+                color: _selectedTag == 'সকল' ? Colors.blue.shade800 : Colors.grey.shade800,
+                fontWeight: _selectedTag == 'সকল' ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ...popularTags.map((tag) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(tag),
+                  selected: _selectedTag == tag,
+                  onSelected: (_) => _onTagChanged(tag),
+                  backgroundColor: Colors.grey.shade100,
+                  selectedColor: Colors.blue.shade100,
+                  labelStyle: TextStyle(
+                    color: _selectedTag == tag ? Colors.blue.shade800 : Colors.grey.shade800,
+                    fontWeight: _selectedTag == tag ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              );
+            }),
+            IconButton(
+              icon: const Icon(Icons.more_horiz),
+              onPressed: _showFilterBottomSheet,
+              tooltip: 'সমস্ত ট্যাগ',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFatwaList() {
+    if (_displayedFatwas.isEmpty && _isLoading) {
+      return ListView.builder(
+        itemCount: 10,
+        itemBuilder: (_, i) => _buildShimmerCard(),
+      );
+    }
+
+    if (_displayedFatwas.isEmpty && !_isLoading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? '"$_searchQuery" এর জন্য কোনো ফলাফল নেই'
+                  : 'কোনো ফতোয়া পাওয়া যায়নি',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+              ),
+            ),
+            if (_searchQuery.isNotEmpty)
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  _onSearchChanged('');
+                },
+                child: const Text('সকল ফতোয়া দেখুন'),
+              ),
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        _currentPage = 0;
+        _hasMore = true;
+        await _fetchFatwas();
+      },
+      child: ListView.separated(
+        controller: _scrollController,
+        padding: const EdgeInsets.all(16),
+        itemCount: _displayedFatwas.length + (_isLoading ? 1 : 0),
+        separatorBuilder: (_, i) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          if (i == _displayedFatwas.length) {
+            return _buildLoadingIndicator();
+          }
+          return FatwaCardWidget(
+            fatwa: _displayedFatwas[i],
+            isBookmarked: _bookmarkedFatwas.contains(_displayedFatwas[i]['id'].toString()),
+            onBookmarkToggle: (id) => _toggleBookmark(id),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildShimmerCard() {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 20,
+              color: Colors.grey.shade200,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: MediaQuery.of(context).size.width * 0.6,
+              height: 16,
+              color: Colors.grey.shade200,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 24,
+                  color: Colors.grey.shade200,
+                ),
+                const Spacer(),
+                Container(
+                  width: 80,
+                  height: 24,
+                  color: Colors.grey.shade200,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: Column(
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'আরো ফতোয়া লোড হচ্ছে...',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -449,169 +579,559 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
 
 class FatwaCardWidget extends StatelessWidget {
   final dynamic fatwa;
+  final bool isBookmarked;
+  final Function(String) onBookmarkToggle;
 
-  const FatwaCardWidget({super.key, required this.fatwa});
+  const FatwaCardWidget({
+    super.key,
+    required this.fatwa,
+    required this.isBookmarked,
+    required this.onBookmarkToggle,
+  });
 
-  String? _getFieldValue(String localField, String apiField) {
-    final value = fatwa[localField] ?? fatwa[apiField];
-    return value?.toString();
+  String _getField(String field1, String field2) {
+    return (fatwa[field1] ?? fatwa[field2] ?? '').toString().trim();
+  }
+
+  String _formatDate(String date) {
+    if (date.isEmpty) return '';
+    final parts = date.split(' ');
+    if (parts.length >= 3) {
+      return '${parts[0]} ${parts[1]}, ${parts[2]}';
+    }
+    return date;
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = _getFieldValue('question_title', 'qtitle');
-    final question = _getFieldValue('question_details', 'question');
-    final answer = _getFieldValue('answer', 'content');
-    final createdAt = fatwa['createdAt']?.toString() ?? fatwa['timestamp']?.toString();
+    final title = _getField('question_title', 'qtitle');
+    final question = _getField('question_details', 'question');
+    final date = _formatDate(fatwa['createdAt']?.toString() ?? fatwa['timestamp']?.toString() ?? '');
+    final tags = _extractTags(fatwa);
+    final id = fatwa['id'].toString();
 
-    List<String> tags = [];
-    if (fatwa['tags'] != null && fatwa['tags'] is List) {
-      tags.addAll((fatwa['tags'] as List).map((t) => t.toString()));
-    }
-
-    return Container(
-      margin: EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: AppColors.lightGreen,
-        borderRadius: BorderRadius.circular(12)
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        title: Text(
-          title ?? "No Title",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (createdAt != null)
-              Text(
-                "তারিখ: $createdAt",
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            if (question != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  question,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            if (tags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Wrap(
-                  spacing: 6,
-                  children: tags
-                      .map((tag) => Chip(
-                    label: Text(tag),
-                    backgroundColor: Colors.green.shade50,
-                    labelStyle: const TextStyle(color: Colors.green),
-                  ))
-                      .toList(),
-                ),
-              ),
-          ],
-        ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => FatwaDetailScreen(fatwa: fatwa),
+              builder: (_) => FatwaDetailScreen(
+                fatwa: fatwa,
+                isBookmarked: isBookmarked,
+                onBookmarkToggle: () => onBookmarkToggle(id),
+              ),
             ),
           );
         },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (title.isNotEmpty)
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade800,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (date.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              date,
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => onBookmarkToggle(id),
+                    icon: Icon(
+                      isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                      color: isBookmarked ? Colors.amber.shade700 : Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+              if (question.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    question,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              if (tags.isNotEmpty)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: tags.map((tag) {
+                      return Container(
+                        margin: const EdgeInsets.only(right: 6, top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.blue.shade100),
+                        ),
+                        child: Text(
+                          tag,
+                          style: TextStyle(
+                            color: Colors.blue.shade800,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
+  List<String> _extractTags(dynamic fatwa) {
+    List<String> tags = [];
+
+    if (fatwa['tag'] != null && fatwa['tag'].toString().isNotEmpty) {
+      tags.add(fatwa['tag'].toString());
+    }
+
+    if (fatwa['tags'] is List) {
+      final tagList = fatwa['tags'] as List;
+      for (var tag in tagList) {
+        if (tag.toString().isNotEmpty) {
+          tags.add(tag.toString());
+        }
+      }
+    }
+
+    return tags.take(3).toList();
+  }
 }
 
-
-class FatwaDetailScreen extends StatelessWidget {
+class FatwaDetailScreen extends StatefulWidget {
   final dynamic fatwa;
+  final bool isBookmarked;
+  final VoidCallback onBookmarkToggle;
 
-  const FatwaDetailScreen({super.key, required this.fatwa});
+  const FatwaDetailScreen({
+    super.key,
+    required this.fatwa,
+    required this.isBookmarked,
+    required this.onBookmarkToggle,
+  });
 
-  String? _getFieldValue(String localField, String apiField) {
-    final value = fatwa[localField] ?? fatwa[apiField];
-    return value?.toString();
+  @override
+  State<FatwaDetailScreen> createState() => _FatwaDetailScreenState();
+}
+
+class _FatwaDetailScreenState extends State<FatwaDetailScreen> {
+  bool _showFullAnswer = false;
+  bool _showFullQuestion = false;
+
+  String _getField(String field1, String field2) {
+    return (widget.fatwa[field1] ?? widget.fatwa[field2] ?? '').toString().trim();
+  }
+
+  void _copyToClipboard(BuildContext context, String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('কপি করা হয়েছে'),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _shareFatwa() async {
+    final title = _getField('question_title', 'qtitle');
+    final question = _getField('question_details', 'question');
+    final answer = _getField('answer', 'content');
+
+    await Share.share(
+      'প্রশ্ন: $title\n\n$question\n\nউত্তর: $answer\n\nসূত্র: ifatwa.info',
+      subject: 'ফতোয়া: $title',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final title = _getFieldValue('question_title', 'qtitle');
-    final question = _getFieldValue('question_details', 'question');
-    final answer = _getFieldValue('answer', 'content');
-    final createdAt = fatwa['createdAt']?.toString() ?? fatwa['timestamp']?.toString();
-
-    List<String> tags = [];
-    if (fatwa['tags'] != null && fatwa['tags'] is List) {
-      tags.addAll((fatwa['tags'] as List).map((t) => t.toString()));
-    }
+    final title = _getField('question_title', 'qtitle');
+    final question = _getField('question_details', 'question');
+    final answer = _getField('answer', 'content');
+    final date = widget.fatwa['createdAt']?.toString() ??
+        widget.fatwa['timestamp']?.toString() ?? '';
+    final tags = _extractTags(widget.fatwa);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title ?? "Fatwa Details", style: TextStyle(
-          color: AppColors.white
-        ),),
-        backgroundColor: Colors.green,
-        iconTheme: IconThemeData(
-          color: AppColors.white
+        title: Text(
+          title.isNotEmpty ? title : 'ফতোয়ার বিস্তারিত',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        actions: [
+          IconButton(
+            onPressed: widget.onBookmarkToggle,
+            icon: Icon(
+              widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: widget.isBookmarked ? Colors.amber.shade700 : null,
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              final fullText = "প্রশ্ন:\n${question.isNotEmpty ? question : title}\n\nউত্তর:\n$answer";
+              _copyToClipboard(context, fullText);
+            },
+            icon: const Icon(Icons.copy),
+          ),
+          IconButton(
+            onPressed: _shareFatwa,
+            icon: const Icon(Icons.share),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tags
+            if (tags.isNotEmpty)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: tags.map((tag) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 8, bottom: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.blue.shade100),
+                      ),
+                      child: Text(
+                        tag,
+                        style: TextStyle(
+                          color: Colors.blue.shade800,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+            // Date
+            if (date.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'তারিখ: $date',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 24),
+
+            // Question Section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.question_answer,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'প্রশ্ন',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  MarkdownBody(
+                    data: question.isNotEmpty ? question : title,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: Colors.black87,
+                      ),
+                      a: TextStyle(color: Colors.blue.shade700),
+                    ),
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(
+                          Uri.parse(href),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Answer Section
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.shade100),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: Colors.green.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'উত্তর',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  MarkdownBody(
+                    data: answer.isNotEmpty ? answer : 'কোনো উত্তর নেই',
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: Colors.black87,
+                      ),
+                      strong: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green.shade800,
+                      ),
+                      a: TextStyle(color: Colors.blue.shade700),
+                      blockquoteDecoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      blockquotePadding: const EdgeInsets.all(8),
+                    ),
+                    onTapLink: (text, href, title) {
+                      if (href != null) {
+                        launchUrl(
+                          Uri.parse(href),
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Quick Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildActionButton(
+                  icon: Icons.copy,
+                  label: 'কপি',
+                  color: Colors.blue,
+                  onTap: () {
+                    final fullText = "প্রশ্ন:\n${question.isNotEmpty ? question : title}\n\nউত্তর:\n$answer";
+                    _copyToClipboard(context, fullText);
+                  },
+                ),
+                _buildActionButton(
+                  icon: Icons.share,
+                  label: 'শেয়ার',
+                  color: Colors.green,
+                  onTap: _shareFatwa,
+                ),
+                _buildActionButton(
+                  icon: Icons.bookmark,
+                  label: widget.isBookmarked ? 'সেভড' : 'সেভ',
+                  color: Colors.amber,
+                  onTap: widget.onBookmarkToggle,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (createdAt != null)
-                Text(
-                  "তারিখ: $createdAt",
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
-                ),
-              if (question != null) ...[
-                const SizedBox(height: 10),
-                Text(
-                  "প্রশ্ন:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green.shade800),
-                ),
-                Text(
-                  question,
-                  style: const TextStyle(fontSize: 15),
-                ),
-              ],
-              if (answer != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  "উত্তর:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green.shade800),
-                ),
-                Text(
-                  answer,
-                  style: const TextStyle(fontSize: 15),
-                ),
-              ],
-              if (tags.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  "Tags:",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green.shade800),
-                ),
-                Wrap(
-                  spacing: 6,
-                  children: tags
-                      .map((tag) => Chip(
-                    label: Text(tag),
-                    backgroundColor: Colors.green.shade50,
-                    labelStyle: const TextStyle(color: Colors.green),
-                  ))
-                      .toList(),
-                ),
-              ],
-            ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        IconButton(
+          onPressed: onTap,
+          icon: Icon(icon, color:  Colors.grey),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            color:  Colors.grey,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
         ),
+      ],
+    );
+  }
+
+  List<String> _extractTags(dynamic fatwa) {
+    List<String> tags = [];
+
+    if (fatwa['tag'] != null && fatwa['tag'].toString().isNotEmpty) {
+      tags.add(fatwa['tag'].toString());
+    }
+
+    if (fatwa['tags'] is List) {
+      final tagList = fatwa['tags'] as List;
+      for (var tag in tagList) {
+        if (tag.toString().isNotEmpty) {
+          tags.add(tag.toString());
+        }
+      }
+    }
+
+    return tags;
+  }
+}
+
+class BookmarkedFatwasScreen extends StatelessWidget {
+  final List<dynamic> allFatwas;
+  final Set<String> bookmarkedIds;
+
+  const BookmarkedFatwasScreen({
+    super.key,
+    required this.allFatwas,
+    required this.bookmarkedIds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bookmarkedFatwas = allFatwas.where(
+          (fatwa) => bookmarkedIds.contains(fatwa['id'].toString()),
+    ).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('সেভ করা ফতোয়া'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.grey.shade800,
+        elevation: 0,
+      ),
+      body: bookmarkedFatwas.isEmpty
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bookmark_border,
+              size: 80,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'কোনো সেভ করা ফতোয়া নেই',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      )
+          : ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: bookmarkedFatwas.length,
+        separatorBuilder: (_, i) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          final fatwa = bookmarkedFatwas[i];
+          return FatwaCardWidget(
+            fatwa: fatwa,
+            isBookmarked: true,
+            onBookmarkToggle: (id) {},
+          );
+        },
       ),
     );
   }
