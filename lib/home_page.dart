@@ -229,15 +229,230 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Icon getIconFromName(String iconName) {
-    switch (iconName) {
+    // Convert to lowercase and replace spaces with underscores for consistency
+    final normalizedName = iconName.toLowerCase().replaceAll(' ', '_');
+
+    switch (normalizedName) {
+    // Existing icons
       case 'sunny_snowing':
         return const Icon(Icons.wb_sunny, color: AppColors.white, size: 40);
       case 'healing':
         return const Icon(Icons.healing, color: AppColors.white, size: 40);
       case 'self_improvement':
-        return const Icon(Icons.health_and_safety, color: AppColors.white, size: 40);
+        return const Icon(
+            Icons.self_improvement, color: AppColors.white, size: 40);
       case 'access_time':
         return const Icon(Icons.access_time, color: AppColors.white, size: 40);
+
+    // Sleep & Rest
+      case 'sleep':
+      case 'bedtime':
+      case 'rest':
+        return const Icon(Icons.bedtime, color: AppColors.white, size: 40);
+      case 'night':
+        return const Icon(
+            Icons.nightlight_round, color: AppColors.white, size: 40);
+      case 'alarm':
+        return const Icon(Icons.alarm, color: AppColors.white, size: 40);
+      case 'hotel':
+        return const Icon(Icons.hotel, color: AppColors.white, size: 40);
+
+    // Quran & Islamic
+      case 'quran':
+      case 'holy_quran':
+      case 'islamic_book':
+        return const Icon(Icons.menu_book, color: AppColors.white, size: 40);
+      case 'mosque':
+      case 'masjid':
+        return const Icon(
+            Icons.account_balance, color: AppColors.white, size: 40);
+      case 'fasting':
+      case 'ramadan':
+      case 'saum':
+        return const Icon(Icons.fastfood, color: AppColors.white, size: 40);
+      case 'hajj':
+      case 'umrah':
+        return const Icon(
+            Icons.temple_buddhist, color: AppColors.white, size: 40);
+      case 'zakat':
+      case 'charity':
+        return const Icon(
+            Icons.volunteer_activism, color: AppColors.white, size: 40);
+      case 'dua':
+      case 'supplication':
+        return const Icon(Icons.handshake, color: AppColors.white, size: 40);
+      case 'tasbih':
+      case 'dhikr':
+        return const Icon(Icons.favorite, color: AppColors.white, size: 40);
+
+    // Health & Wellness
+      case 'health':
+      case 'fitness':
+        return const Icon(
+            Icons.fitness_center, color: AppColors.white, size: 40);
+      case 'mental_health':
+        return const Icon(Icons.psychology, color: AppColors.white, size: 40);
+      case 'meditation':
+        return const Icon(
+            Icons.self_improvement, color: AppColors.white, size: 40);
+      case 'nutrition':
+      case 'food':
+        return const Icon(Icons.restaurant, color: AppColors.white, size: 40);
+      case 'water':
+      case 'hydration':
+        return const Icon(Icons.water_drop, color: AppColors.white, size: 40);
+      case 'exercise':
+        return const Icon(
+            Icons.directions_run, color: AppColors.white, size: 40);
+      case 'yoga':
+        return const Icon(
+            Icons.directions_walk, color: AppColors.white, size: 40);
+
+    // Education & Learning
+      case 'education':
+      case 'learning':
+        return const Icon(Icons.school, color: AppColors.white, size: 40);
+      case 'study':
+      case 'reading':
+        return const Icon(Icons.menu_book, color: AppColors.white, size: 40);
+      case 'knowledge':
+      case 'ilm':
+        return const Icon(Icons.lightbulb, color: AppColors.white, size: 40);
+      case 'memory':
+        return const Icon(Icons.memory, color: AppColors.white, size: 40);
+      case 'language':
+        return const Icon(Icons.language, color: AppColors.white, size: 40);
+      case 'arabic':
+        return const Icon(Icons.text_fields, color: AppColors.white, size: 40);
+
+    // Family & Social
+      case 'family':
+        return const Icon(
+            Icons.family_restroom, color: AppColors.white, size: 40);
+      case 'marriage':
+      case 'wedding':
+        return const Icon(
+            Icons.favorite_border, color: AppColors.white, size: 40);
+      case 'children':
+      case 'kids':
+        return const Icon(Icons.child_care, color: AppColors.white, size: 40);
+      case 'parents':
+        return const Icon(Icons.people, color: AppColors.white, size: 40);
+      case 'community':
+      case 'ummah':
+        return const Icon(Icons.groups, color: AppColors.white, size: 40);
+      case 'friends':
+        return const Icon(Icons.group, color: AppColors.white, size: 40);
+
+    // Work & Finance
+      case 'work':
+      case 'job':
+        return const Icon(Icons.work, color: AppColors.white, size: 40);
+      case 'business':
+        return const Icon(Icons.business, color: AppColors.white, size: 40);
+      case 'finance':
+      case 'money':
+      case 'maal':
+        return const Icon(Icons.attach_money, color: AppColors.white, size: 40);
+      case 'savings':
+        return const Icon(Icons.savings, color: AppColors.white, size: 40);
+      case 'investment':
+        return const Icon(Icons.trending_up, color: AppColors.white, size: 40);
+
+    // Technology & Digital
+      case 'technology':
+      case 'tech':
+        return const Icon(Icons.computer, color: AppColors.white, size: 40);
+      case 'digital':
+        return const Icon(Icons.devices, color: AppColors.white, size: 40);
+      case 'social_media':
+        return const Icon(Icons.share, color: AppColors.white, size: 40);
+      case 'internet':
+        return const Icon(Icons.wifi, color: AppColors.white, size: 40);
+      case 'mobile':
+      case 'phone':
+        return const Icon(
+            Icons.phone_android, color: AppColors.white, size: 40);
+
+    // Lifestyle & Daily Activities
+      case 'daily':
+      case 'routine':
+        return const Icon(
+            Icons.calendar_today, color: AppColors.white, size: 40);
+      case 'morning':
+        return const Icon(Icons.wb_twilight, color: AppColors.white, size: 40);
+      case 'evening':
+        return const Icon(Icons.nights_stay, color: AppColors.white, size: 40);
+      case 'habits':
+        return const Icon(Icons.repeat, color: AppColors.white, size: 40);
+      case 'productivity':
+        return const Icon(Icons.check_circle, color: AppColors.white, size: 40);
+      case 'time_management':
+        return const Icon(Icons.timer, color: AppColors.white, size: 40);
+
+    // Ethics & Morality
+      case 'ethics':
+      case 'akhlaq':
+        return const Icon(Icons.emoji_people, color: AppColors.white, size: 40);
+      case 'patience':
+      case 'sabr':
+        return const Icon(
+            Icons.hourglass_bottom, color: AppColors.white, size: 40);
+      case 'gratitude':
+      case 'shukr':
+        return const Icon(Icons.thumb_up, color: AppColors.white, size: 40);
+      case 'forgiveness':
+        return const Icon(
+            Icons.favorite_border, color: AppColors.white, size: 40);
+      case 'honesty':
+        return const Icon(
+            Icons.verified_user, color: AppColors.white, size: 40);
+
+    // Clothing & Appearance
+      case 'clothing':
+      case 'dress':
+        return const Icon(Icons.checkroom, color: AppColors.white, size: 40);
+      case 'hijab':
+      case 'purdah':
+        return const Icon(Icons.person, color: AppColors.white, size: 40);
+      case 'beard':
+        return const Icon(Icons.face, color: AppColors.white, size: 40);
+      case 'cleanliness':
+      case 'taharah':
+        return const Icon(Icons.clean_hands, color: AppColors.white, size: 40);
+
+    // Food & Drink
+      case 'halal':
+        return const Icon(
+            Icons.restaurant_menu, color: AppColors.white, size: 40);
+      case 'haram':
+        return const Icon(Icons.block, color: AppColors.white, size: 40);
+      case 'drink':
+      case 'beverage':
+        return const Icon(Icons.local_drink, color: AppColors.white, size: 40);
+      case 'meat':
+        return const Icon(Icons.set_meal, color: AppColors.white, size: 40);
+
+    // Special Categories
+      case 'emergency':
+      case 'urgent':
+        return const Icon(Icons.emergency, color: AppColors.white, size: 40);
+      case 'important':
+        return const Icon(
+            Icons.priority_high, color: AppColors.white, size: 40);
+      case 'new':
+      case 'recent':
+        return const Icon(Icons.new_releases, color: AppColors.white, size: 40);
+      case 'popular':
+      case 'trending':
+        return const Icon(Icons.trending_up, color: AppColors.white, size: 40);
+      case 'favorite':
+      case 'bookmark':
+        return const Icon(Icons.bookmark, color: AppColors.white, size: 40);
+      case 'starred':
+        return const Icon(Icons.star, color: AppColors.white, size: 40);
+
+    // Default fallback
       default:
         return const Icon(Icons.help_outline, color: AppColors.white, size: 40);
     }

@@ -808,13 +808,6 @@ class _FatwaDetailScreenState extends State<FatwaDetailScreen> {
         ),
         actions: [
           IconButton(
-            onPressed: widget.onBookmarkToggle,
-            icon: Icon(
-              widget.isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-              color: widget.isBookmarked ? Colors.amber.shade700 : null,
-            ),
-          ),
-          IconButton(
             onPressed: () {
               final fullText = "প্রশ্ন:\n${question.isNotEmpty ? question : title}\n\nউত্তর:\n$answer";
               _copyToClipboard(context, fullText);
@@ -1086,6 +1079,8 @@ class BookmarkedFatwasScreen extends StatelessWidget {
     required this.bookmarkedIds,
   });
 
+
+
   @override
   Widget build(BuildContext context) {
     final bookmarkedFatwas = allFatwas.where(
@@ -1094,22 +1089,13 @@ class BookmarkedFatwasScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('সেভ করা ফতোয়া'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.grey.shade800,
-        elevation: 0,
+        title: const Text('সেভ করা ফতোয়া')
       ),
       body: bookmarkedFatwas.isEmpty
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.bookmark_border,
-              size: 80,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
             Text(
               'কোনো সেভ করা ফতোয়া নেই',
               style: TextStyle(
@@ -1129,7 +1115,8 @@ class BookmarkedFatwasScreen extends StatelessWidget {
           return FatwaCardWidget(
             fatwa: fatwa,
             isBookmarked: true,
-            onBookmarkToggle: (id) {},
+            onBookmarkToggle: (id){
+            },
           );
         },
       ),
