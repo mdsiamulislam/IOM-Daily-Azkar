@@ -110,23 +110,29 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final offset = loadMore ? _displayedFatwas.length : 0;
-      final queryParams = {
-        'limit': _limit.toString(),
-        'offset': offset.toString(),
-        if (_selectedTag != null && _selectedTag != 'All')
-          'tags': _selectedTag!,
-      };
+      // final offset = loadMore ? _displayedFatwas.length : 0;
+      // final queryParams = {
+      //   'limit': _limit.toString(),
+      //   'offset': offset.toString(),
+      //   if (_selectedTag != null && _selectedTag != 'All')
+      //     'tags': _selectedTag!,
+      // };
 
-      final response = await http.get(
+      final response = await http.post(
         Uri.parse('https://search.ifatwa.info/indexes/posts/search'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization' : 'Bearer bdbad192801a4f64141931602d982d78139a4d1f5c1ff686fb4741d7f65a31cd'
         },
+        body: jsonEncode(
+            {
+              'q':'posts',
+              'limit': 1000
+            }
+        )
       );
-
-      print(response.body);
+      
+      print('API Response: ${response.body}');
 
 
 
