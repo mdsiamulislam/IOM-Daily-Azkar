@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adhan/adhan.dart';
+import 'package:get/get.dart';
 import 'package:iomdailyazkar/core/constants/constants.dart';
+import 'package:iomdailyazkar/features/prayer_time/pages/namaz_prohibited_times_page.dart';
 
 import '../../../../core/constants/city_data.dart';
 import '../../../../core/local_storage/user_pref.dart';
@@ -98,7 +100,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     String amPm = hour >= 12 ? 'PM' : 'AM';
     if (hour > 12) hour -= 12;
     if (hour == 0) hour = 12;
-    return '${_toBanglaDigit(hour)}:${_toBanglaDigit(minute.toString().padLeft(2, '0'))} $amPm';
+    // return '${_toBanglaDigit(hour)}:${_toBanglaDigit(minute.toString().padLeft(2, '0'))} $amPm';
+    return '${_toBanglaDigit(hour)}:${_toBanglaDigit(minute.toString().padLeft(2, '0'))}';
   }
 
   String _toBanglaDigit(dynamic number) {
@@ -225,7 +228,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     final double prayerNameFontSize =
     isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
     final double prayerTimeFontSize =
-    isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
+    isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
 
     if (prayerTimes == null) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
@@ -272,62 +275,36 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Text(
                 (remainingTime.isNegative)
                     ? 'পরবর্তী ওয়াক্তের জন্য অপেক্ষা করুন'
                     : 'পরবর্তী ওয়াক্ত : $nextPrayerName',
-                style: AppTextStyles.regular.copyWith(
-                  fontSize: headerFontSize,
-                  color: Colors.white70,
+                style: AppTextStyles.bold.copyWith(
+                  fontSize: timerFontSize,
+                  color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: isSmallScreen ? 4 : 8),
               Text(
                 formatBanglaDuration(remainingTime),
                 style: AppTextStyles.bold.copyWith(
                   fontSize: timerFontSize,
                   color: Colors.white,
                 ),
-                textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
-          GestureDetector(
-            onTap: () {
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red, width: 1),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.cancel, color: Colors.red, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    'যে যে সময়ে নামায নিষিদ্ধ',
-                    style: AppTextStyles.bold.copyWith(
-                      color: Colors.red,
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
           Divider(
               color: Colors.white54,
               height: isSmallScreen ? 16 : 20,
-              thickness: 1),
+              thickness: 1
+          ),
           LayoutBuilder(
             builder: (context, constraints) {
               const int crossAxisCount = 2;
@@ -386,24 +363,28 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                name,
-                                style: AppTextStyles.bold.copyWith(
-                                  fontSize: prayerNameFontSize,
-                                  color: Colors.white,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                              SizedBox(height: isSmallScreen ? 2 : 4),
-                              Text(
-                                '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
-                                style: AppTextStyles.regular.copyWith(
-                                  fontSize: prayerTimeFontSize,
-                                  color: Colors.white70,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Text(
+                                    name,
+                                    style: AppTextStyles.bold.copyWith(
+                                      fontSize: prayerNameFontSize,
+                                      color: Colors.white70,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text(
+                                    '${formatBanglaTime(start)} - ${formatBanglaTime(end)}',
+                                    style: AppTextStyles.bold.copyWith(
+                                      fontSize: prayerTimeFontSize,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                               SizedBox(height: isSmallScreen ? 4 : 6),
                               ClipRRect(
@@ -415,7 +396,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                                   Colors.white.withOpacity(0.3),
                                   valueColor:
                                   const AlwaysStoppedAnimation<Color>(
-                                      Colors.lightGreenAccent),
+                                      AppColors.lightGreen
+                                  ),
                                   minHeight: isSmallScreen ? 3 : 4,
                                 ),
                               ),
@@ -428,6 +410,41 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                 }),
               );
             },
+          ),
+          Divider(
+              color: Colors.white54,
+              height: isSmallScreen ? 16 : 20,
+              thickness: 1
+          ),
+          GestureDetector(
+            onTap: () {
+              Get.to(NamazProhibitedTimesPage());
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cancel, color: Colors.redAccent, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'যে যে সময়ে নামায নিষিদ্ধ',
+                    style: AppTextStyles.bold.copyWith(
+                      color: Colors.redAccent,
+                      fontSize: 12,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 8,
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                      color: Colors.redAccent,
+                      size: 18
+                  )
+                ],
+              ),
+            ),
           ),
         ],
       ),
