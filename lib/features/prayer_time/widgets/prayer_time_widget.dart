@@ -145,7 +145,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
   void calculatePrayerTimes() {
     final today = DateComponents.from(DateTime.now());
-    final params = CalculationMethod.muslim_world_league.getParameters();
+    final params = CalculationMethod.karachi.getParameters();
     params.madhab = Madhab.hanafi;
 
     try {
