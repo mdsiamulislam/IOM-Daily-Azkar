@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:iomdailyazkar/features/tasbih/screens/tasbih_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,16 +47,21 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
 
+          ListTile(
+            leading: const Icon(Icons.add_circle_outline),
+            title: const Text('তসবিহ গণনা'),
+            onTap: () {
+              Get.to(TasbihScreen());
+            },
+          ),
+
+
           // Setting Page
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text('সেটিংস'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
-              );
+              Get.to(const SettingsPage());
             },
           ),
 
