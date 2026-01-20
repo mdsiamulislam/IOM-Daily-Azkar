@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TasbihController extends GetxController {
@@ -43,12 +44,7 @@ class TasbihController extends GetxController {
   void reset() {
     count.value = 0;
     _saveCount();
-    Get.snackbar(
-      'রিসেট সম্পন্ন',
-      'গণনা আবার শুরু করুন',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+    AppSnackbar.showInfo("তসবিহ গণনা রিসেট করা হয়েছে।");
   }
 
   void changeTarget() {
