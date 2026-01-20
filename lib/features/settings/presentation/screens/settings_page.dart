@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
 
@@ -42,13 +43,7 @@ class _SettingsPageState extends State<SettingsPage> {
       arabicFont: arabicFont,
     );
 
-    Get.snackbar(
-      'সফল',
-      'ফন্ট পরিবর্তন করা হয়েছে',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+    AppSnackbar.showInfo('ফন্ট সফলভাবে সংরক্ষিত হয়েছে।');
   }
 
   @override

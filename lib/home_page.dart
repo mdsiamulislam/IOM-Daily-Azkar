@@ -7,22 +7,18 @@ import 'package:http/http.dart' as http;
 import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
 import 'package:iomdailyazkar/features/prayer_time/controllers/prayer_times_controller.dart';
 import 'package:iomdailyazkar/features/prayer_time/pages/city_selection_page.dart';
+import 'package:iomdailyazkar/home/widgets/app_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:share_plus/share_plus.dart';
 import 'core/constants/constants.dart';
 import 'core/theme/app_text_styles.dart';
-import 'features/about/presentation/screens/about_app_screen.dart';
-import 'features/about/presentation/screens/our_apps_screen.dart';
 import 'features/dua/presentation/screens/dua_list_screen.dart';
 import 'features/ifatwa/presentation/screens/i_fatwa_list_screen.dart';
 import 'features/prayer_time/pages/local_prayer_time_screen.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
 
 import 'features/prayer_time/widgets/prayer_time_widget.dart';
-import 'features/settings/presentation/screens/settings_page.dart';
 
 
 
@@ -523,7 +519,7 @@ class _HomeScreenState extends State<HomeScreen> {
           )
         ],
       ),
-      drawer: _buildDrawer(),
+      drawer: AppDrawer(context: context, mounted: mounted),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: fetchAndStoreData,
@@ -546,123 +542,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: AppColors.primaryGreen),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Center(
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundImage: AssetImage('assets/logo.png'),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text('স্বাগতম আপনাকে, এখানে প্রতিদিনের জন্য দোয়া ও আজকার পেয়ে জাবেন ইনশাল্লাহ', textAlign: TextAlign.center, style: AppTextStyles.bold.copyWith(
-                  color: Colors.white,
-                  fontSize: 14,
-                )),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.apps),
-            title: const Text('আমাদের অন্যান্য অ্যাপস'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OurAppsScreen()),
-              );
-            },
-          ),
-
-
-          // Setting Page
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: Text('সেটিংস'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SettingsPage()),
-              );
-            },
-          ),
-
-          ListTile(
-            leading: const Icon(Icons.share),
-            title: Text('অ্যাপ শেয়ার করুন'),
-            onTap: () async {
-              final info = await PackageInfo.fromPlatform();
-              final packageName = info.packageName;
-              final shareText =
-                  'IOM Daily Azkar App\n\nhttps://play.google.com/store/apps/details?id=$packageName';
-              Share.share(shareText);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.star),
-            title: Text('রেটিং দিন'),
-            onTap: () async {
-              final info = await PackageInfo.fromPlatform();
-              final packageName = info.packageName;
-              final url = 'https://play.google.com/store/apps/details?id=$packageName';
-
-              // Using canLaunchUrl and launchUrl directly as launchUrl is deprecated
-              if (await canLaunchUrl(Uri.parse(url))) {
-                await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-              } else {
-                if(mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Play Store খুলতে ব্যর্থ হয়েছে।')),
-                  );
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.feedback),
-            title: Text('ফিডব্যাক দিন'),
-            onTap: () async {
-              final Uri emailLaunchUri = Uri(
-                scheme: 'mailto',
-                path: 'mdsiamulislams@gmail.com',
-                query: Uri.encodeFull('subject=Feedback for IOM Daily Azkar App'),
-              );
-
-              if (await canLaunchUrl(emailLaunchUri)) {
-                await launchUrl(emailLaunchUri);
-              } else {
-                if(mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('ইমেইল অ্যাপ খুলতে ব্যর্থ হয়েছে।')),
-                  );
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: Text('অ্যাপ সম্পর্কে'),
-            onTap: (){
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutAppScreen()),
-              );
-            },
-          ),
-        ],
       ),
     );
   }

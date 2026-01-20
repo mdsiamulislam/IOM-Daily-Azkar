@@ -23,6 +23,7 @@ class AppTheme {
           fontSize: 20,
           color: AppColors.white,
           fontWeight: FontWeight.bold,
+          fontFamily: fontController.fontFamily.value,
         )
       ),
     );
