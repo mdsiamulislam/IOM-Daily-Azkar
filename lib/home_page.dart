@@ -19,6 +19,7 @@ import 'features/prayer_time/pages/local_prayer_time_screen.dart';
 import 'package:get/get.dart';
 
 import 'features/prayer_time/widgets/prayer_time_widget.dart';
+import 'home/widgets/horizontal_card.dart';
 
 
 
@@ -35,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> categories = [];
   List<dynamic> hadithList = [];
   List<dynamic> duaData = [];
-  List<dynamic> fatwaData = [];
+  List<dynamic> iomdailyazkar = [];
   List<dynamic> data = [];
   bool isLoading = true;
   int randomIndex = 0;
@@ -162,18 +163,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final storedHadithList = prefs.getString('hadithList');
       final storedData = prefs.getString('data');
       final storedDuaData = prefs.getString('duaData');
-      final storedFatwaData = prefs.getString('ifatwaData');
+      final storedIomdailyazkarData = prefs.getString('iomdailyazkar');
 
       if (storedCategories != null &&
           storedHadithList != null &&
           storedData != null &&
           storedDuaData != null &&
-          storedFatwaData != null) {
+          storedIomdailyazkarData != null) {
         categories = json.decode(storedCategories);
         hadithList = json.decode(storedHadithList);
         data = json.decode(storedData);
         duaData = json.decode(storedDuaData);
-        fatwaData = json.decode(storedFatwaData);
+        iomdailyazkar = json.decode(storedIomdailyazkarData);
 
         if (hadithList.isNotEmpty) {
           randomIndex = generateRandomIndex(hadithList.length);
@@ -201,12 +202,12 @@ class _HomeScreenState extends State<HomeScreen> {
         await prefs.setString('hadithList', json.encode(result['hadith'] ?? []));
         await prefs.setString('duaData', json.encode(result['dua'] ?? []));
         await prefs.setString('data', json.encode(result['data'] ?? []));
-        await prefs.setString('ifatwaData', json.encode(result['ifatwa'] ?? []));
+        await prefs.setString('iomdailyazkar', json.encode(result['iomdailyazkar'] ?? []));
 
         categories = result['categories'] ?? [];
         hadithList = result['hadith'] ?? [];
         duaData = result['dua'] ?? [];
-        fatwaData = result['ifatwa'] ?? [];
+        iomdailyazkar = result['iomdailyazkar'] ?? [];
         data = result['data'] ?? [];
 
         if (hadithList.isNotEmpty) {
@@ -533,6 +534,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     city: prayerTimesController.city.value,
                   ),
               ),
+              const SizedBox(height: 16),
+              isLoading ? _buildShimmerCard() : HorizontalCard(
+                    duaData: iomdailyazkar,
+                    title: "IOM এর নির্বাচিত বাধ্যতামূলক সকাল সন্ধ্যার  দু'আ",
+                    description: "IOM-এর বিশেষ বিন্যাসে সাজানো দু'আ সমূহ ",
+                    icon: Icons.checklist,
+                  ),
               const SizedBox(height: 16),
               isLoading ? _buildShimmerCard() : _buildHadithCard(hadithText, hadithRef),
               const SizedBox(height: 24),
