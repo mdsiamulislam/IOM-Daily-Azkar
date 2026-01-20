@@ -76,3 +76,31 @@ flutter:
           weight: 600
         - asset: assets/fonts/NotoSerifBengali/NotoSerifBengaliLight.ttf
           weight: 300
+
+      # Arabic Fonts
+
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/arabic/Amiri/Amiri-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/arabic/Amiri/Amiri-Regular.ttf
+          weight: 400
+
+    - family: IndoPak
+      fonts:
+        - asset: assets/fonts/arabic/IndoPak/IndoPak.ttf
+          weight: 700
+        - asset: assets/fonts/arabic/IndoPak/IndoPak.ttf
+          weight: 400
+
+    - family: Scheherazade_New
+      fonts:
+        - asset: assets/fonts/arabic/Scheherazade_New/ScheherazadeNew-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/arabic/Scheherazade_New/ScheherazadeNew-Regular.ttf
+          weight: 400
+
+    - family: Uthmanic
+      fonts:
+        - asset: assets/fonts/arabic/Uthmanic/Uthmanic.otf
+          weight: 400

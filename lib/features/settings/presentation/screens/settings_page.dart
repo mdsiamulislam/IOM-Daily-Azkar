@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -17,11 +17,30 @@ class _SettingsPageState extends State<SettingsPage> {
     'HindSiliguri',
     'Ador-Noirrit',
     'NotoSerifBengali',
-    'Default'
+    'Default',
   ];
 
-  Future<void> _saveFont(String font) async {
-    await fontController.updateFont(font);
+  final List<String> arabicFonts = [
+    'Amiri',
+    'Scheherazade_New',
+    'Uthmanic',
+    'IndoPak',
+    'Default',
+  ];
+
+  /// Default হলে null return করবে
+  String? _resolveFont(String font) {
+    return font == 'Default' ? null : font;
+  }
+
+  Future<void> _saveFont({
+    required String banglaFont,
+    required String arabicFont,
+  }) async {
+    await fontController.updateFont(
+      banglaFont: banglaFont,
+      arabicFont: arabicFont,
+    );
 
     Get.snackbar(
       'সফল',
@@ -29,10 +48,6 @@ class _SettingsPageState extends State<SettingsPage> {
       snackPosition: SnackPosition.BOTTOM,
       backgroundColor: Colors.green,
       colorText: Colors.white,
-      messageText: Text(
-        'ফন্ট পরিবর্তন করা হয়েছে',
-        style: TextStyle(fontFamily: font, color: Colors.white),
-      ),
     );
   }
 
@@ -40,76 +55,134 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
         title: const Text('সেটিংস'),
         centerTitle: true,
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _sectionTitle('বাংলা ফন্ট নির্বাচন'),
-
             const SizedBox(height: 8),
 
-            Obx(() => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.green),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: fontController.fontFamily.value,
-                  hint: const Text('ফন্ট নির্বাচন করুন'),
-                  items: banglaFonts.map((font) {
-                    return DropdownMenuItem<String>(
-                      value: font,
-                      child: Text(
-                        font,
-                        style: TextStyle(fontFamily: font),
-                      ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    if (value == null) return;
-                    _saveFont(value);
-                  },
-                ),
-              ),
+            Obx(() => _fontDropdown(
+              fonts: banglaFonts,
+              selectedFont: fontController.fontFamily.value,
+              onChanged: (value) {
+                _saveFont(
+                  banglaFont: value,
+                  arabicFont: fontController.arabicFontFamily.value,
+                );
+              },
             )),
 
             const SizedBox(height: 24),
 
-            /// Preview
-            Obx(() => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'প্রিভিউ',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'আলহামদুলিল্লাহ, এটি একটি বাংলা ফন্ট প্রিভিউ।',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontFamily: fontController.fontFamily.value,
-                  ),
-                ),
-              ],
+            Obx(() => _fontPreview(
+              title: 'ফন্ট প্রিভিউ',
+              text: 'এই ফন্টটি বাংলা টেক্সট প্রদর্শনের জন্য ব্যবহৃত হবে।',
+              font: fontController.fontFamily.value,
+            )),
+
+            const SizedBox(height: 32),
+
+            _sectionTitle('আরবি ফন্ট নির্বাচন'),
+            const SizedBox(height: 8),
+
+            Obx(() => _fontDropdown(
+              fonts: arabicFonts,
+              selectedFont: fontController.arabicFontFamily.value,
+              onChanged: (value) {
+                _saveFont(
+                  banglaFont: fontController.fontFamily.value,
+                  arabicFont: value,
+                );
+              },
+            )),
+
+            const SizedBox(height: 24),
+
+            Obx(() => _fontPreview(
+              title: 'ফন্ট প্রিভিউ',
+              text: '''
+                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ۞
+                ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ۝
+                ''',
+              font: fontController.arabicFontFamily.value,
+              isArabic: true,
             )),
           ],
         ),
       ),
     );
   }
+
+  Widget _fontDropdown({
+    required List<String> fonts,
+    required String selectedFont,
+    required Function(String) onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.green),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: fonts.contains(selectedFont) ? selectedFont : null,
+          items: fonts.map((font) {
+            return DropdownMenuItem(
+              value: font,
+              child: Text(
+                font,
+                style: TextStyle(fontFamily: _resolveFont(font)),
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            if (value != null) onChanged(value);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _fontPreview({
+    required String title,
+    required String text,
+    required String font,
+    bool isArabic = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          text,
+          textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+          textAlign: isArabic ? TextAlign.right : TextAlign.left,
+          style: TextStyle(
+            fontSize: isArabic ? 20 : 16,
+            height: isArabic ? 1.8 : 1.4,
+            fontFamily: _resolveFont(font),
+          ),
+        ),
+      ],
+    );
+  }
+
 
   Widget _sectionTitle(String title) {
     return Text(

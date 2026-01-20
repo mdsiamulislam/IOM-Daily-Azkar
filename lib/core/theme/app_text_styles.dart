@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 
 
 class FontController extends GetxController {
-  // Observable font family
-  var fontFamily = 'HindSiliguri'.obs;
+  final RxString fontFamily = 'HindSiliguri'.obs;
+  final RxString arabicFontFamily = 'Amiri'.obs;
 
   @override
   void onInit() {
@@ -14,15 +14,22 @@ class FontController extends GetxController {
   }
 
   Future<void> loadFont() async {
-    print('Loading font preference...');
     final prefs = await SharedPreferences.getInstance();
     fontFamily.value = prefs.getString('banglaFont') ?? 'HindSiliguri';
+    arabicFontFamily.value = prefs.getString('arabicFont') ?? 'Amiri';
   }
 
-  Future<void> updateFont(String newFont) async {
+  Future<void> updateFont({
+    required String banglaFont,
+    required String arabicFont,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('banglaFont', newFont);
-    fontFamily.value = newFont;
+
+    await prefs.setString('banglaFont', banglaFont);
+    await prefs.setString('arabicFont', arabicFont);
+
+    fontFamily.value = banglaFont;
+    arabicFontFamily.value = arabicFont;
   }
 }
 

@@ -1,7 +1,11 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:get/get.dart';
+
+
+import '../../../../core/theme/app_text_styles.dart';
 
 class DuaDetailScreen extends StatefulWidget {
   final int duaIndex;
@@ -25,6 +29,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
   ValueNotifier<int>? _currentPageNotifier;
   String _appPackageName = '';
   String _appStoreLink = '';
+  final FontController fontController = Get.put(FontController());
 
   @override
   void initState() {
@@ -371,6 +376,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                           style: TextStyle(
                             fontSize: arabicFontSize,
                             height: 1.8,
+                            fontFamily: fontController.arabicFontFamily.value,
                           ),
                           textAlign: TextAlign.center,
                           textDirection: TextDirection.rtl,

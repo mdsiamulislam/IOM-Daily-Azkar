@@ -193,14 +193,67 @@ class AboutAppScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+
+            // Credits that open a dialog box
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('ক্রেডিটস'),
+                      content: Column(
+                        children: [
+                          const Text('এই অ্যাপটি তৈরি করতে যারা অবদান রেখেছেন তাদের প্রতি কৃতজ্ঞতা প্রকাশ করছি:'),
+                          const SizedBox(height: 10),
+                          const Text('ডেভেলপার: Md Siamul Islam Soaib'),
+                          const Text('ডিজাইনার: Jane Doe'),
+                          const Text('টেস্টার: John Smith'),
+                          const SizedBox(height: 10),
+                          const Text('বিশেষ ধন্যবাদ আমাদের ব্যবহারকারীদের যারা আমাদের সমর্থন করেছেন।'),
+
+                          // Font credits with links
+                          const SizedBox(height: 20),
+                          const Text('ব্যবহৃত ফন্টসমূহ:'),
+                          GestureDetector(
+                            onTap: () {
+                              _openLink('https://www.onlinewebfonts.com/icon', context);
+                            },
+                            child: const Text(
+                              'IndoPak arabic',
+                              style: TextStyle(
+                                color: AppColors.primaryGreen,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('বন্ধ করুন'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: const Text(
+                  'ক্রেডিটস দেখুন',
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    color: AppColors.primaryGreen,
+                  ),
+                ),
+              ),
+            ),
+
           ],
         ),
       ),
     );
   }
 
-  // লিঙ্ক টাইলের জন্য একটি রিইউজেবল উইজেট
-  // এটিই একমাত্র _buildLinkTile ফাংশন যা থাকবে
   Widget _buildLinkTile(
       BuildContext context, {
         required IconData icon,
