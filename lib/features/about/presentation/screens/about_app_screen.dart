@@ -194,38 +194,145 @@ class AboutAppScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Credits that open a dialog box
+            // Credits Dialog Button
             Center(
               child: TextButton(
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('ক্রেডিটস'),
+                      scrollable: true,
+                      title: const Text(
+                        'ক্রেডিটস',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
                       content: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('এই অ্যাপটি তৈরি করতে যারা অবদান রেখেছেন তাদের প্রতি কৃতজ্ঞতা প্রকাশ করছি:'),
-                          const SizedBox(height: 10),
-                          const Text('ডেভেলপার: Md Siamul Islam Soaib'),
-                          const Text('ডিজাইনার: Jane Doe'),
-                          const Text('টেস্টার: John Smith'),
-                          const SizedBox(height: 10),
-                          const Text('বিশেষ ধন্যবাদ আমাদের ব্যবহারকারীদের যারা আমাদের সমর্থন করেছেন।'),
 
-                          // Font credits with links
-                          const SizedBox(height: 20),
-                          const Text('ব্যবহৃত ফন্টসমূহ:'),
+                          // App Contributors
+                          const Text(
+                            'এই অ্যাপটি তৈরি করতে যারা অবদান রেখেছেন তাদের প্রতি কৃতজ্ঞতা প্রকাশ করছি।',
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'বিশেষ ধন্যবাদ আমাদের ব্যবহারকারীদের যারা আমাদের সমর্থন করেছেন।',
+                          ),
+
+                          const SizedBox(height: 16),
+                          Divider(color: Colors.green.shade200),
+                          const SizedBox(height: 8),
+
+                          // Fonts Section
+                          const Text(
+                            'ব্যবহৃত ফন্টসমূহ:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+
+                          // Bengali Fonts
+                          const Text('বাংলা ফন্ট:'),
                           GestureDetector(
-                            onTap: () {
-                              _openLink('https://www.onlinewebfonts.com/icon', context);
-                            },
+                            onTap: () => _openLink('https://fonts.google.com/specimen/Ador+Noirrit', context),
                             child: const Text(
-                              'IndoPak arabic',
+                              'Ador-Noirrit',
                               style: TextStyle(
-                                color: AppColors.primaryGreen,
+                                color: Colors.green,
                                 decoration: TextDecoration.underline,
                               ),
                             ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://fonts.google.com/specimen/Hind+Siliguri', context),
+                            child: const Text(
+                              'HindSiliguri',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://fonts.google.com/specimen/Noto+Serif+Bengali', context),
+                            child: const Text(
+                              'NotoSerifBengali',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+                          // Arabic Fonts
+                          const Text('আরবি ফন্ট:'),
+                          GestureDetector(
+                            onTap: () => _openLink('https://www.amirifont.org/', context),
+                            child: const Text(
+                              'Amiri',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://www.onlinewebfonts.com/icon', context),
+                            child: const Text(
+                              'IndoPak',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://software.sil.org/scheherazade/', context),
+                            child: const Text(
+                              'Scheherazade_New',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://www.arabicfonts.net/uthmanic', context),
+                            child: const Text(
+                              'Uthmanic',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+                          Divider(color: Colors.green.shade200),
+                          const SizedBox(height: 8),
+
+                          // Open Source Info
+                          const Text(
+                            'Open Source / Contribution:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'এই অ্যাপটি ওপেন সোর্স। আপনি চাইলে কোড কন্ট্রিবিউট করতে পারেন বা নতুন ফিচার প্রস্তাব করতে পারেন।',
+                          ),
+                          GestureDetector(
+                            onTap: () => _openLink('https://github.com/mdsiamulislam/IOM-Daily-Azkar', context),
+                            child: const Text(
+                              'GitHub Repository',
+                              style: TextStyle(
+                                color: Colors.green,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'আপনি চাইলে pull request পাঠাতে বা bug report করতে পারেন।',
                           ),
                         ],
                       ),
@@ -242,12 +349,11 @@ class AboutAppScreen extends StatelessWidget {
                   'ক্রেডিটস দেখুন',
                   style: TextStyle(
                     decoration: TextDecoration.underline,
-                    color: AppColors.primaryGreen,
+                    color: Colors.green,
                   ),
                 ),
               ),
             ),
-
           ],
         ),
       ),

@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
 import 'package:iomdailyazkar/features/prayer_time/controllers/prayer_times_controller.dart';
 import 'package:iomdailyazkar/features/prayer_time/pages/city_selection_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -458,6 +461,23 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<bool> isInternetAvailable() async {
+    final connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult == ConnectivityResult.none) {
+      return false;
+    }
+
+    try {
+      final result = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 3));
+
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String hadithText = hadithList.isNotEmpty ? hadithList[randomIndex]['hadis'] ?? '' : 'আজকের হাদিস পাওয়া যায়নি।';
@@ -761,13 +781,17 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 6,
       shadowColor: Colors.green.withOpacity(0.3),
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => IFatwaListScreen(fatwaData: fatwaData),
-            ),
-          );
+        onTap: () async{
+          if (!mounted) return;
+
+          final isAvailable = await isInternetAvailable();
+
+          if (isAvailable) {
+            Get.to(IFatwaListScreen());
+          } else {
+            AppSnackbar.showInfo('ইন্টারনেট সংযোগ নেই। অনলাইনে ফতোয়া বিভাগ অ্যাক্সেস করতে ইন্টারনেট প্রয়োজন।');
+          }
+
         },
         borderRadius: BorderRadius.circular(16),
         child: Padding(

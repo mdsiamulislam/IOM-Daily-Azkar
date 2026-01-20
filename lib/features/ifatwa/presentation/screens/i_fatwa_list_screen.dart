@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
+import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 
 class IFatwaListScreen extends StatefulWidget {
-  final List<dynamic> fatwaData;
   final String? filterTag;
 
   const IFatwaListScreen({
     super.key,
-    required this.fatwaData,
     this.filterTag,
   });
 
@@ -44,10 +43,8 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
   void initState() {
     super.initState();
     _loadBookmarks();
-    _allFatwas = List.from(widget.fatwaData);
     _extractInitialTags();
     _applyFilters();
-
     _scrollController.addListener(_onScroll);
     _fetchFatwas();
   }
@@ -108,12 +105,8 @@ class _IFatwaListScreenState extends State<IFatwaListScreen> {
         }
       }
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('ডেটা লোড করতে সমস্যা হয়েছে'),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-        ),
+      AppSnackbar.showError(
+        'ফতোয়া লোড করতে সমস্যা হয়েছে। অনুগ্রহ করে পরে আবার চেষ্টা করুন।',
       );
     } finally {
       setState(() => _isLoading = false);
