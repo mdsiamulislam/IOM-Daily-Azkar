@@ -23,7 +23,7 @@ class DuaDetailScreen extends StatefulWidget {
 
 class _DuaDetailScreenState extends State<DuaDetailScreen> {
   bool isBookmarked = false;
-  double arabicFontSize = 22.0;
+  double arabicFontSize = 26.0;
   double banglaFontSize = 18.0;
   late PageController _pageController;
   ValueNotifier<int>? _currentPageNotifier;
@@ -375,7 +375,7 @@ class _DuaDetailScreenState extends State<DuaDetailScreen> {
                           duaArabic,
                           style: TextStyle(
                             fontSize: arabicFontSize,
-                            height: 1.8,
+                            height: 3.5,
                             fontFamily: fontController.arabicFontFamily.value,
                           ),
                           textAlign: TextAlign.center,

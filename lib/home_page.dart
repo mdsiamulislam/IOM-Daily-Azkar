@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return const Icon(Icons.healing, color: AppColors.white, size: 40);
       case 'self_improvement':
         return const Icon(
-            Icons.self_improvement, color: AppColors.white, size: 40);
+            Icons.verified_user_outlined, color: AppColors.white, size: 40);
       case 'access_time':
         return const Icon(Icons.access_time, color: AppColors.white, size: 40);
 
@@ -294,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return const Icon(Icons.psychology, color: AppColors.white, size: 40);
       case 'meditation':
         return const Icon(
-            Icons.self_improvement, color: AppColors.white, size: 40);
+            Icons.verified_user, color: AppColors.white, size: 40);
       case 'nutrition':
       case 'food':
         return const Icon(Icons.restaurant, color: AppColors.white, size: 40);
@@ -661,24 +661,39 @@ class _HomeScreenState extends State<HomeScreen> {
             hadithText,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 16,
+              fontSize: 18,
               color: AppColors.primaryGreen,
               fontStyle: FontStyle.italic,
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            "রেফারেন্স: $hadithRef",
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: AppColors.primaryGreen),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: const Icon(Icons.share, color: AppColors.primaryGreen),
-              onPressed: () => Share.share("$hadithText\n\nহাদিস: $hadithRef"),
-            ),
-          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "রেফারেন্স: $hadithRef",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: AppColors.primaryGreen),
+              ),
+              IconButton(
+                icon: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Icon(Icons.share, color: AppColors.primaryGreen),
+                    const SizedBox(width: 4),
+                    Text(
+                      "শেয়ার করুন",
+                      style: TextStyle(
+                        color: AppColors.primaryGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
+                ),
+                onPressed: () => Share.share("$hadithText\n\nহাদিস: $hadithRef"),
+              ),
+            ],
+          )
         ],
       ),
     );
@@ -726,7 +741,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 10),
                 Text(
                   title,
-                  style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.w500, fontSize: 15),
+                  style: const TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 18),
                   textAlign: TextAlign.center,
                 ),
               ],

@@ -233,14 +233,10 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
 
     final double containerPadding =
     isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
-    final double headerFontSize =
-    isSmallScreen ? 11.0 : isMediumScreen ? 13.0 : 14.0;
     final double timerFontSize =
-    isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
-    final double prayerNameFontSize =
-    isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 15.0;
+    isSmallScreen ? 18.0 : isMediumScreen ? 20.0 : 22.0;
     final double prayerTimeFontSize =
-    isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
+    isSmallScreen ? 18.0 : isMediumScreen ? 18.0 : 20.0;
 
     if (prayerTimes == null) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
@@ -307,7 +303,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                     formatBanglaDuration(remainingTime),
                     style: AppTextStyles.bold.copyWith(
                       fontSize: timerFontSize,
-                      color: Colors.white,
+                      color: Colors.white70,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -382,7 +378,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                                       Text(
                                         name,
                                         style: AppTextStyles.bold.copyWith(
-                                          fontSize: prayerNameFontSize,
+                                          fontSize: prayerTimeFontSize,
                                           color: Colors.white70,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -445,7 +441,7 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                         'যে যে সময়ে নামায নিষিদ্ধ',
                         style: AppTextStyles.bold.copyWith(
                           color: Colors.redAccent,
-                          fontSize: 12,
+                          fontSize: 14,
                         ),
                       ),
                       SizedBox(
