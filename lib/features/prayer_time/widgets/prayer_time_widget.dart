@@ -234,9 +234,9 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
     final double containerPadding =
     isSmallScreen ? 8.0 : isMediumScreen ? 10.0 : 12.0;
     final double timerFontSize =
-    isSmallScreen ? 18.0 : isMediumScreen ? 20.0 : 22.0;
+    isSmallScreen ? 14.0 : isMediumScreen ? 16.0 : 18.0;
     final double prayerTimeFontSize =
-    isSmallScreen ? 18.0 : isMediumScreen ? 18.0 : 20.0;
+    isSmallScreen ? 12.0 : isMediumScreen ? 14.0 : 16.0;
 
     if (prayerTimes == null) {
       return const Center(child: CircularProgressIndicator(color: Colors.white));
@@ -435,12 +435,12 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.cancel, color: Colors.redAccent, size: 18),
+                      const Icon(Icons.cancel, color: Color(0xFFFF9E9E), size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'যে যে সময়ে নামায নিষিদ্ধ',
                         style: AppTextStyles.bold.copyWith(
-                          color: Colors.redAccent,
+                          color: Color(0xFFFF9E9E),
                           fontSize: 14,
                         ),
                       ),
@@ -449,8 +449,8 @@ class _CombinedPrayerTimesWidgetState extends State<CombinedPrayerTimesWidget> {
                       ),
                       Icon(
                           Icons.arrow_forward_ios,
-                          color: Colors.redAccent,
-                          size: 18
+                          color: Color(0xFFFF9E9E),
+                          size: 14
                       )
                     ],
                   ),

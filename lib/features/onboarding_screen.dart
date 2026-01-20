@@ -83,7 +83,7 @@ class OnboardingScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "IOM Daily Azkar এ স্বাগতম",
+                              "IOM Daily Azkar",
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
