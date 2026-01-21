@@ -1,16 +1,24 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:iomdailyazkar/core/local_storage/user_pref.dart';
 import 'package:iomdailyazkar/core/theme/app_theme.dart';
 import 'package:iomdailyazkar/core/universal_widgets/app_snackbar.dart';
+import 'package:iomdailyazkar/features/notification/services/firebase_notification_services.dart';
 import 'package:iomdailyazkar/features/onboarding_screen.dart';
 import 'package:iomdailyazkar/home_page.dart';
 import 'package:upgrader/upgrader.dart';
 import 'core/local_storage/app_preferences.dart';
 import 'core/theme/app_text_styles.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  final FirebaseNotificationServices firebaseNotificationServices = FirebaseNotificationServices();
+  await firebaseNotificationServices.initFCM();
   Get.put(FontController());
   await AppPreferences.init();
 
