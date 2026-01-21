@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:iomdailyazkar/features/notification/screens/notification_screen.dart';
 import 'package:iomdailyazkar/features/tasbih/screens/tasbih_screen.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
@@ -54,9 +55,6 @@ class AppDrawer extends StatelessWidget {
               Get.to(TasbihScreen());
             },
           ),
-
-
-          // Setting Page
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text('সেটিংস'),
