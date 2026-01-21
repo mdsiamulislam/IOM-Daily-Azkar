@@ -2,7 +2,10 @@ import 'package:get/get.dart';
 import 'package:iomdailyazkar/core/local_storage/user_pref.dart';
 
 class PrayerTimesController extends GetxController {
-  RxString city = ''.obs;
+  RxString city = 'Dhaka'.obs;
+  RxBool useCurrentLocation = false.obs;
+  RxBool isLocationLoading = false.obs;
+
   final UserPref _userPref = UserPref();
 
   @override
@@ -12,11 +15,29 @@ class PrayerTimesController extends GetxController {
   }
 
   Future<void> loadUserCity() async {
-    city.value = await _userPref.getUserCurrentCity();
+    final savedCity = await _userPref.getUserCurrentCity();
+    if (savedCity.isNotEmpty) {
+      city.value = savedCity;
+    }
   }
 
   Future<void> setCity(String newCity) async {
     city.value = newCity;
-    _userPref.setUserCurrentCity(newCity);
+    // await _userPref.setUserCurrentCity(newCity);
+  }
+
+  Future<void> enableLocation() async {
+    useCurrentLocation.value = true;
+    isLocationLoading.value = true;
+
+    // simulate gps fetch
+    await Future.delayed(const Duration(seconds: 1));
+
+    // TODO: set city from GPS here
+    isLocationLoading.value = false;
+  }
+
+  void disableLocation() {
+    useCurrentLocation.value = false;
   }
 }

@@ -34,19 +34,19 @@ android {
         versionName = flutter.versionName
     }
 
-//    signingConfigs {
-//        create("release") {
-//            keyAlias = "my_key_alias"
-//            keyPassword = "121212"
-//            storeFile = file("my-release-key.jks")
-//            storePassword = "121212"
-//        }
-//    }
+    signingConfigs {
+        create("release") {
+            keyAlias = "my_key_alias"
+            keyPassword = "121212"
+            storeFile = file("my-release-key.jks")
+            storePassword = "121212"
+        }
+    }
 
     buildTypes {
         release {
-//          signingConfig = signingConfigs.getByName("release")
-            signingConfig = signingConfigs.getByName("debug")
+          signingConfig = signingConfigs.getByName("release")
+//            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
         }
